@@ -1,0 +1,10 @@
+{
+  "grupper": [
+    {"namn": "lovtrad", "hojd_m": 15.0, "marke": "simulering", "arter": 2},
+    {"namn": "barrtrad", "hojd_m": 25.0, "marke": "simulering", "arter": 2},
+    {"namn": "ort", "hojd_m": 0.5, "marke": "simulering", "arter": 0},
+    {"namn": "ormbunke", "hojd_m": 1.0, "marke": "simulering", "arter": 4},
+    {"namn": "kottepalm_ginkgo", "hojd_m": 2.0, "marke": "simulering", "arter": 1},
+    {"namn": "vattenvaxt", "hojd_m": 0.1, "marke": "simulering", "arter": 1}
+  ]
+}

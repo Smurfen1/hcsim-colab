@@ -1,0 +1,185 @@
+=== Prov 1: hckarta --skriv version 1 före (HEAD 12d3c73dddb9c251267103132ad9fb3be8395cad) ===
+
+--- t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 1
+vattentyp Land: 2225
+vattentyp Flodfara: 640
+vattentyp Trask: 146
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/bredd1386-fore/v1-t500000 (kontrollsumma 9828389463751256610)
+kontrollsumma: 0x88657424ed15ea22 (9828389463751256610)
+
+sha256 filer t=500000:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+5022d89ab13e628ef94942fd63ec2a8974df394626312ec315e90fa7b19549d1  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+e80232b4d18d0bb7e794be263ba937626f383f9917d4b8a737ba893a8f752293  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+dee8af2d12018659bd572b426576b798b7433f288252e872ab24683725794290  vattentyp.u8
+15bb368594e7ea2a1c9bb976136a6c62427fe74abfca6b16b36f6a31adaf26b3  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 1
+vattentyp Land: 2663
+vattentyp Flodfara: 256
+vattentyp Trask: 107
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/bredd1386-fore/v1-t20000 (kontrollsumma 7307636836510803732)
+kontrollsumma: 0x6569f0fc3bc92714 (7307636836510803732)
+
+sha256 filer t=20000:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+910b78eaece2b5889138d78bbd5aab54aca3e7b6b430e3f292f3810072494d4c  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+f40ae0b5c3ef9b289d6ae6643c8432e77994ad72118031aa7a28aa1357efd88c  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+80f504b2d2dc8a409288910197f5afe768950f0dd647ce075b996f7b475f9d16  vattentyp.u8
+21e18eb89856232fa8f8886048525bda0811711408481958e5d50197a1570212  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+=== Prov 2: hcsim slutsummor före ===
+ar=5 antal=5548 fodda=34303 dod_svalt=29085 dod_alder=70 v_medel=76.04392061285031
+{"fro":181,"ar":5,"n0":400,"slut_antal":5548,"djur_summa":4225976351498359620,"karta_summa":9828389463751256610,"ar_rader":[{"ar":5,"antal":5548,"fodda":34303,"dod_svalt":29085,"dod_alder":70,"v_medel":76.04392061285031}]}
+
+=== Prov 3: version 2 mittlinjer och vattentyper före ===
+--- fro=181 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 2
+vattentyp Land: 2822
+vattentyp Flodfara: 0
+vattentyp Trask: 189
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.007788
+medel balte_andel: 0.060952
+skrev 3D-filer till /tmp/bredd1386-fore/v2-f181-t500000 (kontrollsumma 3197361095185254305)
+kontrollsumma: 0x2c5f4ef9c92bc7a1 (3197361095185254305)
+sha256 vattentyp.u8: cf1999f7386a340508dc782c26f9b82124f5878a0f065af3da92b26cae049e3d
+sha256 vatten_yta.f32: 6022ef5b311bfa1f9c5efb277f4d1ceccf0c67c5dfb6423ab062df4d210c2539
+sha256 fara_andel.f32: 88ad2c01fc11b33eca9176651c5b6c3cc56242f64213766c839ed21bbeeed2f6
+sha256 balte_andel.f32: f84f386665ec2bff52c3ffb9652ff4a20ba4bc46c10332e6c4aa33eed8f152ed
+
+--- fro=181 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 2
+vattentyp Land: 2911
+vattentyp Flodfara: 0
+vattentyp Trask: 115
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.003063
+medel balte_andel: 0.023968
+skrev 3D-filer till /tmp/bredd1386-fore/v2-f181-t20000 (kontrollsumma 2161726019821368245)
+kontrollsumma: 0x1dfffe5c992bf3b5 (2161726019821368245)
+sha256 vattentyp.u8: 277fd92fb0916f44ed399b000fc9965642d850b1d2815120e9a0eb952194e687
+sha256 vatten_yta.f32: d43863b9ea12670200c9c53bfe915653df7517efa21eccf9151d0c36dc9bc6e5
+sha256 fara_andel.f32: 4c7960de6c28b58ea2e0177735063175708a3c1bddab879a679e1a6cf23e638e
+sha256 balte_andel.f32: bf0a2fd59723edea62ce3de38976de53c1c17906300f3f84e6173f64eb867b2d
+
+--- fro=182 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 2
+vattentyp Land: 2836
+vattentyp Flodfara: 0
+vattentyp Trask: 175
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.007827
+medel balte_andel: 0.061255
+skrev 3D-filer till /tmp/bredd1386-fore/v2-f182-t500000 (kontrollsumma 3470963378813927088)
+kontrollsumma: 0x302b56cd9697feb0 (3470963378813927088)
+sha256 vattentyp.u8: 4bba4cfff897de9a054b04f6302bcb58b3cbd35ed6fdd95559365ece4f5382b9
+sha256 vatten_yta.f32: 7f2edfe712d34cc7e83eb55066d15b18c5397a7fb6a825dc184e3c2e77e9d62a
+sha256 fara_andel.f32: 0497a56fefc7501a1d3e5d85d8c802a23d4a4e87e2c0a68ae9fe31ee4352b74f
+sha256 balte_andel.f32: 913f4af52a18468d98ff62086b15c8f87a713e478d5fc836e575f281cd188c39
+
+--- fro=182 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 2
+vattentyp Land: 2896
+vattentyp Flodfara: 0
+vattentyp Trask: 130
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.002993
+medel balte_andel: 0.023422
+skrev 3D-filer till /tmp/bredd1386-fore/v2-f182-t20000 (kontrollsumma 2147404533437242472)
+kontrollsumma: 0x1dcd1d0bb4971c68 (2147404533437242472)
+sha256 vattentyp.u8: d874134ef3eb33cc12ab9ece3554c2985d659a2068aa41f8a215b50cc89c066e
+sha256 vatten_yta.f32: 422bdaf1b3a0684ee443ebee3f6179391327ee035f8327b3c6e15311ddbcc862
+sha256 fara_andel.f32: a740f9df23279b1dac251c27fb168bcf78c25d33ae75ea0edccad33e949f625e
+sha256 balte_andel.f32: 51e4b7180d6335622b37582ebf0fae2af5da744a13b4028ea1b1740ef3f9d411
+
+--- fro=183 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 2
+vattentyp Land: 2853
+vattentyp Flodfara: 0
+vattentyp Trask: 158
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.007695
+medel balte_andel: 0.060224
+skrev 3D-filer till /tmp/bredd1386-fore/v2-f183-t500000 (kontrollsumma 8913273566473377194)
+kontrollsumma: 0x7bb24f158b8655aa (8913273566473377194)
+sha256 vattentyp.u8: c5d7c5a1da6ca691290f1becdd45b0c05ce6873c389b896630d820aefd1733eb
+sha256 vatten_yta.f32: a1d4c0200ecbed9abd554d60a43c0e9b2538c631fd88cdc7c0551dcc4a1a0294
+sha256 fara_andel.f32: 8b6102be6e34811b51d5b99f6df02681ae10895c809253259f11313a48253a7c
+sha256 balte_andel.f32: 3f4a3c8503825a6f125272e7e7b381b0f6d80528d6403629d6ce81b8e7452102
+
+--- fro=183 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 2
+vattentyp Land: 2912
+vattentyp Flodfara: 0
+vattentyp Trask: 114
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.002993
+medel balte_andel: 0.023422
+skrev 3D-filer till /tmp/bredd1386-fore/v2-f183-t20000 (kontrollsumma 17240183453667267819)
+kontrollsumma: 0xef416f823a6794eb (17240183453667267819)
+sha256 vattentyp.u8: 4172ebfcdd5cc4855ab5ae7fcc6379bb2995d29dfcbaf294810e4063423e5d45
+sha256 vatten_yta.f32: 465195307da275477aa2e68094be385005cdb312d236943ec98a5304892b1593
+sha256 fara_andel.f32: c03b2dc7bf810fe9157e3354cccc6ed01cea86d35a144cf5003cf997b3e51dbc
+sha256 balte_andel.f32: 5e71c2ac388482f5c5dbb948ecb09dc9befccc8370c3570b4045c40d92a4d7b8
+

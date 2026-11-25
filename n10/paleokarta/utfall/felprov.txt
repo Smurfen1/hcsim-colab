@@ -1,0 +1,8 @@
+utan fel: alla 6 prov gröna
+rött: vinkeln åt fel håll (samma_lage_som_gplates)
+rött: kedjan i omvänd ordning (samma_lage_som_gplates)
+rött: ingen interpolation mellan raderna (samma_lage_som_gplates)
+rött: polygonens hörn läses som längdgrad, bredgrad (hell_creek_ligger_pa_nordamerika)
+rött: polygonens tid prövas inte (samma_lage_som_gplates)
+rött: radpar över en övergång mellan fasta plattor (overgang_mellan_fasta_plattor)
+6 av 6 insatta fel gav rött prov

@@ -1,0 +1,55 @@
+=== Prov 1: hckarta --skriv före (HEAD 5559ae30d786b4daa4b31d6bcf700b14cc54a312) ===
+
+--- t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+vattentyp Land: 2225
+vattentyp Flodfara: 640
+vattentyp Trask: 146
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/fara1343-fore/t500000 (kontrollsumma 9828389463751256610)
+kontrollsumma: 0x88657424ed15ea22 (9828389463751256610)
+
+sha256 filer t=500000:
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+15bb368594e7ea2a1c9bb976136a6c62427fe74abfca6b16b36f6a31adaf26b3  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+5022d89ab13e628ef94942fd63ec2a8974df394626312ec315e90fa7b19549d1  karta.json
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+dee8af2d12018659bd572b426576b798b7433f288252e872ab24683725794290  vattentyp.u8
+e80232b4d18d0bb7e794be263ba937626f383f9917d4b8a737ba893a8f752293  period.u8
+
+--- t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+vattentyp Land: 2663
+vattentyp Flodfara: 256
+vattentyp Trask: 107
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/fara1343-fore/t20000 (kontrollsumma 7307636836510803732)
+kontrollsumma: 0x6569f0fc3bc92714 (7307636836510803732)
+
+sha256 filer t=20000:
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+21e18eb89856232fa8f8886048525bda0811711408481958e5d50197a1570212  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+80f504b2d2dc8a409288910197f5afe768950f0dd647ce075b996f7b475f9d16  vattentyp.u8
+910b78eaece2b5889138d78bbd5aab54aca3e7b6b430e3f292f3810072494d4c  karta.json
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+f40ae0b5c3ef9b289d6ae6643c8432e77994ad72118031aa7a28aa1357efd88c  period.u8
+
+=== Prov 2: hcsim slutsummor före ===
+ar=5 antal=5548 fodda=34303 dod_svalt=29085 dod_alder=70 v_medel=76.04392061285031
+{"fro":181,"ar":5,"n0":400,"slut_antal":5548,"djur_summa":4225976351498359620,"karta_summa":9828389463751256610,"ar_rader":[{"ar":5,"antal":5548,"fodda":34303,"dod_svalt":29085,"dod_alder":70,"v_medel":76.04392061285031}]}

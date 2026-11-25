@@ -1,0 +1,15 @@
+# Provpunkterna för jämförelsen med GPlates webbtjänst (gws.gplates.org, modellen PALEOMAP). Namn, längdgrad, bredgrad i dag.
+# Hell Creek-platserna är fyndplatser ur Paleobiology Database (PBDB, colls/list med formation=Hell Creek, hämtad 2026-11-19);
+# de andra är provpunkter på andra plattor, valda för att pröva kedjorna (koordinaterna är bara indata, inga påståenden).
+Gilbert Creek, Garfield County MT (PBDB col:11931)	-106.569901	47.637699
+Sieber Ranch, MT (PBDB col:100852)	-107.115555	47.546665
+Bucklin Township nära Marmarth, ND (PBDB col:118381)	-103.946365	46.286884
+Buffalo, SD (PBDB col:124207)	-103.65139	45.396942
+Darnell Triceratops site, WY (PBDB col:225318)	-104.274002	43.666
+Paris	2.3522	48.8566
+Nairobi	36.8219	-1.2921
+Sao Paulo	-46.6333	-23.5505
+Delhi	77.209	28.6139
+Sydney	151.2093	-33.8688
+Kapstaden	18.4241	-33.9249
+Tokyo	139.6917	35.6895

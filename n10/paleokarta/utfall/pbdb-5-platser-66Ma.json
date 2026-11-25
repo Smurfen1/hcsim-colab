@@ -1,0 +1,10 @@
+{
+"elapsed_time":0.00264,
+"records": [
+{"oid":"col:11931","sfm":"Hell Creek","lng":-106.569901,"lat":47.637699,"nam":"upper end, Gilbert Creek","aka":"Ankylosaurus type","noc":3,"oei":"Late Maastrichtian","eag":72.2,"lag":66,"rid":"ref:4210","pm1":"scotese","gpl":"101","ps1":"late","pln":-81.19,"pla":54.08,"pm2":"gplates","gp2":"101","ps2":"late","pln2":-66.33,"pla2":57.76},
+{"oid":"col:100852","sfm":"Hell Creek","lng":-107.115555,"lat":47.546665,"nam":"Quarry No. 3, Sieber Ranch (AMNH)","aka":"Hell Creek Cañon","noc":1,"oei":"Maastrichtian","eag":72.2,"lag":66,"rid":"ref:53938","pm1":"scotese","gpl":"101","ps1":"late","pln":-81.83,"pla":54.10,"pm2":"gplates","gp2":"101","ps2":"late","pln2":-67.02,"pla2":57.83},
+{"oid":"col:118381","sfm":"Hell Creek","lng":-103.946365,"lat":46.286884,"nam":"Bucklin Township, near Marmarth","aka":"Gamerabaena sonsalla type locality","noc":5,"oei":"Late Maastrichtian","eag":72.2,"lag":66,"rid":"ref:38136","pm1":"scotese","gpl":"101","ps1":"late","pln":-78.96,"pla":52.28,"pm2":"gplates","gp2":"101","ps2":"late","pln2":-64.45,"pla2":55.76},
+{"oid":"col:124207","sfm":"Hell Creek","lng":-103.651390,"lat":45.396942,"nam":"Buffalo, southwest","noc":1,"oei":"Maastrichtian","eag":72.2,"lag":66,"rid":"ref:41320","pm1":"scotese","gpl":"101","ps1":"late","pln":-79.04,"pla":51.36,"pm2":"gplates","gp2":"101","ps2":"late","pln2":-64.79,"pla2":54.87},
+{"oid":"col:225318","sfm":"Hell Creek","lng":-104.274002,"lat":43.666000,"nam":"Darnell Triceratops site, main bonebed","aka":"Naturalis Quarry","noc":1,"oei":"Maastrichtian","eag":72.2,"lag":66,"rid":"ref:81556","pm1":"scotese","gpl":"101","ps1":"late","pln":-80.45,"pla":49.82,"pm2":"gplates","gp2":"101","ps2":"late","pln2":-66.70,"pla2":53.48}
+]
+}

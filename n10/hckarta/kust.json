@@ -1,0 +1,26 @@
+{
+  "om": "Kustens läge för Hell Creek-kartan (ägare: SIMULERINGEN2; omröstningen kust, Alt 1618 och 1619). Tid i år före K-Pg-gränsen; simuleringens år 0 = t 979 000. Riktning och avstånd från kartans mittpunkt (--lat0 47 --lon0 -108 --b 64 --h 48 --ruta-m 2000: 47,4312° N, 107,1501° V), 0° mot norr, 90° mot öster; storcirkel i dagens koordinater, räknat av piharness docs/evolution/kust-avstand.rs (kust-avstand.txt). Kartans fönster sträcker sig 64 km österut från mittpunkten; inget av avstånden nedan når fönstret, så kartan får inget hav. Källorna och citaten: n10/docs/2026-11-21-kallor-kartan.md, avsnittet Kusten (Fowler 2020).",
+  "poster": [
+    {
+      "t_ar_fore_gransen": 979000,
+      "riktning_grader": 90,
+      "avstand_km": null,
+      "kalla": "Fowler 2020 (doi 10.3390/geosciences10110435) [T]: Hell Creek avsattes 'on a coastal plain bordering the Western Interior Seaway'; havet låg österut. Inget avstånd för simuleringens år 0. Ullmann m.fl. 2021 (kusten inom 5 km) gäller formationens bas, t 1 081 000, före år 0.",
+      "markning": "ingen källa"
+    },
+    {
+      "t_ar_fore_gransen": 336000,
+      "riktning_grader": 90,
+      "avstand_km": null,
+      "kalla": "Fowler 2020 [T]: formationens sista två sekvenser avsattes under 'the last 0.263–0.336 Ma of the Cretaceous'. Före dem: inget läst avstånd till kusten.",
+      "markning": "ingen källa"
+    },
+    {
+      "t_ar_fore_gransen": 0,
+      "riktning_grader": 99.0,
+      "avstand_km": 508.0,
+      "kalla": "Närmaste belagda havstunga, inte en strandlinje: Cantapeta vid Fort Rice, North Dakota (Gadd och Sankey 2020, doi 10.1130/abs/2020AM-351707 [S]: 'Cantapeta Marine Tongue ... documented near Fort Rice'). Fowler 2020 [T]: 'correlation of the upper Montanan sequence with the North Dakotan Cantapeta tongue'; de två sista sekvenserna tillsammans omfattar de sista 263 000–336 000 åren, så den översta började senare än 336 000 år före gränsen; hur mycket senare säger ingen läst källa. Fort Rice: OpenStreetMap node 151527745 (46,5261° N, 100,5843° V). När tungan började är inte känt närmare.",
+      "markning": "källa"
+    }
+  ]
+}

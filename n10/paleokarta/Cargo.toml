@@ -1,0 +1,10 @@
+[package]
+name = "paleokarta"
+version = "0.1.0"
+edition = "2021"
+description = "En plats i dag till sitt läge för miljoner år sedan (PALEOMAP-modellens rotationer, Scotese 2016) och höjden där i PaleoDEM (Scotese och Wright 2018). Håkan 2026-11-19."
+
+[dependencies]
+
+[profile.release]
+opt-level = 3

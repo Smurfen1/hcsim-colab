@@ -1,0 +1,3 @@
+# Höjderna i textkartorna (PaleoDEMS_long_lat_elev_csv_v2.zip) mot netCDF-kartorna (Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc.zip)
+Map16_065Ma.csv	Map16_PALEOMAP_1deg_KT_Boundary_65Ma.nc	punkter 65341	olika 499	vid 90° N 361	inom 40–65° N och 115–55° V 0	största skillnad 3680 m
+Map17_070Ma.csv	Map17_PALEOMAP_1deg_Late_Cretaceous_70Ma.nc	punkter 65341	olika 419	vid 90° N 361	inom 40–65° N och 115–55° V 0	största skillnad 4800 m

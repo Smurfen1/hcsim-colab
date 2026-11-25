@@ -1,0 +1,477 @@
+=== Prov 1–3 före (HEAD a4869b258e1139374a69703accdaefb05fa58363) ===
+(Claude 2026-11-22, Håkans Alt 1547: 6 sha256-rader för vaxtgrupper.json och karta.json i flodversion 2 räknade om efter att artkopplingen fick 13 grupper till; inga andra filer skiljde i de avsnitten. Avsnitt med tidsmodell 2 lämnades orörda, eftersom loppbytena (Alt 1395) ändrade dem med avsikt.)
+Räknat före någon kodändring för Alt 1395.
+
+--- flodversion=1 tidsmodell=1 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 1
+tidsmodell: 1
+flodriktning: 1
+vattentyp Land: 2225
+vattentyp Flodfara: 640
+vattentyp Trask: 146
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/lopp1395-fore/v1-tm1-t500000 (kontrollsumma 9828389463751256610)
+kontrollsumma: 0x88657424ed15ea22 (9828389463751256610)
+
+sha256 filer flodversion=1 tidsmodell=1 t=500000:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+5022d89ab13e628ef94942fd63ec2a8974df394626312ec315e90fa7b19549d1  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+e80232b4d18d0bb7e794be263ba937626f383f9917d4b8a737ba893a8f752293  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+dee8af2d12018659bd572b426576b798b7433f288252e872ab24683725794290  vattentyp.u8
+15bb368594e7ea2a1c9bb976136a6c62427fe74abfca6b16b36f6a31adaf26b3  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- flodversion=1 tidsmodell=1 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 1
+tidsmodell: 1
+flodriktning: 1
+vattentyp Land: 2663
+vattentyp Flodfara: 256
+vattentyp Trask: 107
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/lopp1395-fore/v1-tm1-t20000 (kontrollsumma 7307636836510803732)
+kontrollsumma: 0x6569f0fc3bc92714 (7307636836510803732)
+
+sha256 filer flodversion=1 tidsmodell=1 t=20000:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+910b78eaece2b5889138d78bbd5aab54aca3e7b6b430e3f292f3810072494d4c  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+f40ae0b5c3ef9b289d6ae6643c8432e77994ad72118031aa7a28aa1357efd88c  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+80f504b2d2dc8a409288910197f5afe768950f0dd647ce075b996f7b475f9d16  vattentyp.u8
+21e18eb89856232fa8f8886048525bda0811711408481958e5d50197a1570212  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- flodversion=1 tidsmodell=1 t=0 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Gransen (Last)
+flodversion: 1
+tidsmodell: 1
+flodriktning: 1
+vattentyp Land: 2657
+vattentyp Flodfara: 256
+vattentyp Trask: 98
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/lopp1395-fore/v1-tm1-t0 (kontrollsumma 9344846268250959607)
+kontrollsumma: 0x81af902b7bbbaef7 (9344846268250959607)
+
+sha256 filer flodversion=1 tidsmodell=1 t=0:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+bf3783d98334378e26151fb254ad7effdec6f342e831622cc7ac104b34c1b203  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+65e412792ceef5f6a2d4fc2ae237917575d38412290dc694c2890c6857a541bb  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+34fe1bb0f7cea0cac034880a39367df4e61a46db81dbd0a82f2de70f0cc5d90f  vattentyp.u8
+862cdef598b3f265a46c7535200b9c56c4ab54ad78f30de0dca6faa2fb587dbd  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- flodversion=1 tidsmodell=2 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 1
+tidsmodell: 2
+flodriktning: 1
+levande fåror: 0 1 2 3 4
+vattentyp Land: 2225
+vattentyp Flodfara: 640
+vattentyp Trask: 146
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/lopp1395-fore/v1-tm2-t500000 (kontrollsumma 9828389463751256610)
+kontrollsumma: 0x88657424ed15ea22 (9828389463751256610)
+
+sha256 filer flodversion=1 tidsmodell=2 t=500000:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+5022d89ab13e628ef94942fd63ec2a8974df394626312ec315e90fa7b19549d1  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+e80232b4d18d0bb7e794be263ba937626f383f9917d4b8a737ba893a8f752293  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+dee8af2d12018659bd572b426576b798b7433f288252e872ab24683725794290  vattentyp.u8
+15bb368594e7ea2a1c9bb976136a6c62427fe74abfca6b16b36f6a31adaf26b3  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- flodversion=1 tidsmodell=2 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 1
+tidsmodell: 2
+flodriktning: 1
+levande fåror: 1 3
+vattentyp Land: 2501
+vattentyp Flodfara: 256
+vattentyp Trask: 276
+vattentyp Sjo: 39
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/lopp1395-fore/v1-tm2-t20000 (kontrollsumma 9191286358991072263)
+kontrollsumma: 0x7f8e023ef88e6c07 (9191286358991072263)
+
+sha256 filer flodversion=1 tidsmodell=2 t=20000:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+a73405dcdc16d0c1b5eb5cb0853f4ea1feeeba8ec691b74e07b06884bff32ea5  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+f40ae0b5c3ef9b289d6ae6643c8432e77994ad72118031aa7a28aa1357efd88c  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+a31fba1b5587027bc575bada6a4b14b323df920f25e65ce091e62a8fffacc1a8  vattentyp.u8
+52866f1dd15d2a00b77ae96580a8575bba56394fe3433271845566ee70af86c9  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- flodversion=1 tidsmodell=2 t=0 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Gransen (Last)
+flodversion: 1
+tidsmodell: 2
+flodriktning: 1
+levande fåror: 1 3
+vattentyp Land: 2494
+vattentyp Flodfara: 256
+vattentyp Trask: 269
+vattentyp Sjo: 53
+vattentyp Brackt: 0
+vattentyp Hav: 0
+skrev 3D-filer till /tmp/lopp1395-fore/v1-tm2-t0 (kontrollsumma 7583268903656465661)
+kontrollsumma: 0x693d2ee3d6b5a4fd (7583268903656465661)
+
+sha256 filer flodversion=1 tidsmodell=2 t=0:
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+665c8a6f9c4c61070d906e47084ed97583e7326dbfcb032ae073d72f3fb52334  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+65e412792ceef5f6a2d4fc2ae237917575d38412290dc694c2890c6857a541bb  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+5a57f1950d792d65430f6db9d9485f09332b88169ed717fa5c70e5dda36a4cd4  vattentyp.u8
+169b26d9052eef3cb522245dae9c1aad084368e2da10e210ba9e0b33a690054f  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+
+--- flodversion=2 tidsmodell=1 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 2
+tidsmodell: 1
+flodriktning: 1
+vattentyp Land: 2822
+vattentyp Flodfara: 0
+vattentyp Trask: 189
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.011903
+medel balte_andel: 0.047610
+medel vall_andel: 0.038946
+rutor med vall: 320
+medel vaxt_tathet lovtrad: 0.459310 (arter=6)
+medel vaxt_tathet barrtrad: 0.015381 (arter=2)
+medel vaxt_tathet ort: 0.118848 (arter=0)
+medel vaxt_tathet ormbunke: 0.021449 (arter=4)
+medel vaxt_tathet kottepalm_ginkgo: 0.009186 (arter=1)
+medel vaxt_tathet vattenvaxt: 0.012109 (arter=3)
+Land-rutor med örttäthet 0,30: 320
+fåra 0: bredd_m=166.929757 balte_m=667.719027 vall_m=600.000000 rutor=64
+fåra 1: bredd_m=149.202516 balte_m=596.810066 vall_m=596.810066 rutor=64
+fåra 2: bredd_m=146.881059 balte_m=587.524235 vall_m=587.524235 rutor=64
+fåra 3: bredd_m=238.418326 balte_m=953.673305 vall_m=600.000000 rutor=64
+fåra 4: bredd_m=176.940862 balte_m=707.763446 vall_m=600.000000 rutor=64
+skrev 3D-filer till /tmp/lopp1395-fore/v2-tm1-t500000 (kontrollsumma 16488677080174641021)
+kontrollsumma: 0xe4d38c7193ef3f7d (16488677080174641021)
+
+sha256 filer flodversion=2 tidsmodell=1 t=500000:
+d288d90fc6e85a582a1e9a6653ac8dbe796fa8b693e8ea4816d17514a13a96a8  balte_andel.f32
+c88f00c557ef385de63558dbac042b82d38def02b955b7b423cc767a8c16bd31  fara_andel.f32
+53cb8ebcdfeb261c6fb7c866c1bf100436bc6f00a2cc4beb5fdbad93508cc79d  foror.tsv
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+9c4dcc18f07d04c9a75fc4ed46823eb585f64bcb04dc267df63cc3bf143c7e7d  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+e80232b4d18d0bb7e794be263ba937626f383f9917d4b8a737ba893a8f752293  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+03851a8921ef80c0898c649fab0a9371117a0f461a64b3ccf07f154ca467bf92  vall_andel.f32
+50f0bd30c715dc8ceeb51ad7f236cb42b0d99738819e963d22a00edb18d08789  vall_hojd.f32
+cf1999f7386a340508dc782c26f9b82124f5878a0f065af3da92b26cae049e3d  vattentyp.u8
+6022ef5b311bfa1f9c5efb277f4d1ceccf0c67c5dfb6423ab062df4d210c2539  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+a2d09d2c23b962c201b5df976781ee528764a8f8272bb4a897f18211b4b0d778  vaxtgrupper.json
+6b58e76695e4704ad8f10d32886de53e0138be02af72a8670da3afbe1b10780a  vaxt_tathet.f32
+
+--- flodversion=2 tidsmodell=1 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 2
+tidsmodell: 1
+flodriktning: 1
+vattentyp Land: 2911
+vattentyp Flodfara: 0
+vattentyp Trask: 115
+vattentyp Sjo: 46
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.004209
+medel balte_andel: 0.016838
+medel vall_andel: 0.015936
+rutor med vall: 128
+medel vaxt_tathet lovtrad: 0.473796 (arter=6)
+medel vaxt_tathet barrtrad: 0.009359 (arter=2)
+medel vaxt_tathet ort: 0.098503 (arter=0)
+medel vaxt_tathet ormbunke: 0.020824 (arter=4)
+medel vaxt_tathet kottepalm_ginkgo: 0.009476 (arter=1)
+medel vaxt_tathet vattenvaxt: 0.008236 (arter=3)
+Land-rutor med örttäthet 0,30: 0
+fåra 0: bredd_m=166.929757 balte_m=667.719027 vall_m=600.000000 rutor=64
+fåra 1: bredd_m=149.202516 balte_m=596.810066 vall_m=596.810066 rutor=64
+skrev 3D-filer till /tmp/lopp1395-fore/v2-tm1-t20000 (kontrollsumma 2210674346604195655)
+kontrollsumma: 0x1eade49b07696f47 (2210674346604195655)
+
+sha256 filer flodversion=2 tidsmodell=1 t=20000:
+14277ab151ee3b8b2b5c2f140e9f721cf3d8386343f634936472e6d05a21b047  balte_andel.f32
+7e497940b60f64c2620ec53c6ad74f880574c897f908c08af87ee26964356e80  fara_andel.f32
+b1371bc8df0384b82ccacaae0131e55c2fe2953b11be89254fb1ae046f0ba7e4  foror.tsv
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+214c231a201fc8d8292ef4fd0d8bf85a8d71affb112e24ba61f338a0c65f6b98  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+f40ae0b5c3ef9b289d6ae6643c8432e77994ad72118031aa7a28aa1357efd88c  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+febd51234c4f30d39a250c1b8db6f0d6493e7123a644ed69f341d63f8ce31999  vall_andel.f32
+45f0479d2c71d19adbce5fa8d1a4819044e079ac943ee7a9a57ac80a0e19922d  vall_hojd.f32
+277fd92fb0916f44ed399b000fc9965642d850b1d2815120e9a0eb952194e687  vattentyp.u8
+d43863b9ea12670200c9c53bfe915653df7517efa21eccf9151d0c36dc9bc6e5  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+a2d09d2c23b962c201b5df976781ee528764a8f8272bb4a897f18211b4b0d778  vaxtgrupper.json
+a6c439c00370562932912240818878ca624c642115406dbdecd40a0e633d14fd  vaxt_tathet.f32
+
+--- flodversion=2 tidsmodell=1 t=0 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Gransen (Last)
+flodversion: 2
+tidsmodell: 1
+flodriktning: 1
+vattentyp Land: 2899
+vattentyp Flodfara: 0
+vattentyp Trask: 112
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.004209
+medel balte_andel: 0.016838
+medel vall_andel: 0.015936
+rutor med vall: 128
+medel vaxt_tathet lovtrad: 0.471842 (arter=6)
+medel vaxt_tathet barrtrad: 0.009115 (arter=2)
+medel vaxt_tathet ort: 0.098014 (arter=0)
+medel vaxt_tathet ormbunke: 0.020697 (arter=4)
+medel vaxt_tathet kottepalm_ginkgo: 0.009437 (arter=1)
+medel vaxt_tathet vattenvaxt: 0.009603 (arter=3)
+Land-rutor med örttäthet 0,30: 0
+fåra 0: bredd_m=166.929757 balte_m=667.719027 vall_m=600.000000 rutor=64
+fåra 1: bredd_m=149.202516 balte_m=596.810066 vall_m=596.810066 rutor=64
+skrev 3D-filer till /tmp/lopp1395-fore/v2-tm1-t0 (kontrollsumma 2151507705835127005)
+kontrollsumma: 0x1ddbb0dbf9d180dd (2151507705835127005)
+
+sha256 filer flodversion=2 tidsmodell=1 t=0:
+14277ab151ee3b8b2b5c2f140e9f721cf3d8386343f634936472e6d05a21b047  balte_andel.f32
+7e497940b60f64c2620ec53c6ad74f880574c897f908c08af87ee26964356e80  fara_andel.f32
+b1371bc8df0384b82ccacaae0131e55c2fe2953b11be89254fb1ae046f0ba7e4  foror.tsv
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+f43665238182a18b1a70cf6c30cd5e6e924fe60bb616056816d018f2bfae0dbf  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+65e412792ceef5f6a2d4fc2ae237917575d38412290dc694c2890c6857a541bb  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+febd51234c4f30d39a250c1b8db6f0d6493e7123a644ed69f341d63f8ce31999  vall_andel.f32
+45f0479d2c71d19adbce5fa8d1a4819044e079ac943ee7a9a57ac80a0e19922d  vall_hojd.f32
+12488f0feda1934a4ae9829ffd2488c7c44bcc39cc56e84bd7349a957ce17893  vattentyp.u8
+c11e2bc15765e3b2ebb152cf8484f35bce6668845f357870cb3379a7dc5e32a6  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+a2d09d2c23b962c201b5df976781ee528764a8f8272bb4a897f18211b4b0d778  vaxtgrupper.json
+397933941a1bb79cf2c7c17d64ca910a50e2d3fd0b2f7874aef76205f7c4bc37  vaxt_tathet.f32
+
+--- flodversion=2 tidsmodell=2 t=500000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Aldre (Last)
+flodversion: 2
+tidsmodell: 2
+flodriktning: 1
+levande fåror: 0 1 2 3 4
+vattentyp Land: 2822
+vattentyp Flodfara: 0
+vattentyp Trask: 189
+vattentyp Sjo: 61
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.011903
+medel balte_andel: 0.047610
+medel vall_andel: 0.038946
+rutor med vall: 320
+medel vaxt_tathet lovtrad: 0.459310 (arter=6)
+medel vaxt_tathet barrtrad: 0.015381 (arter=2)
+medel vaxt_tathet ort: 0.118848 (arter=0)
+medel vaxt_tathet ormbunke: 0.021449 (arter=4)
+medel vaxt_tathet kottepalm_ginkgo: 0.009186 (arter=1)
+medel vaxt_tathet vattenvaxt: 0.012109 (arter=3)
+Land-rutor med örttäthet 0,30: 320
+fåra 0: bredd_m=166.929757 balte_m=667.719027 vall_m=600.000000 rutor=64
+fåra 1: bredd_m=149.202516 balte_m=596.810066 vall_m=596.810066 rutor=64
+fåra 2: bredd_m=146.881059 balte_m=587.524235 vall_m=587.524235 rutor=64
+fåra 3: bredd_m=238.418326 balte_m=953.673305 vall_m=600.000000 rutor=64
+fåra 4: bredd_m=176.940862 balte_m=707.763446 vall_m=600.000000 rutor=64
+skrev 3D-filer till /tmp/lopp1395-fore/v2-tm2-t500000 (kontrollsumma 16488677080174641021)
+kontrollsumma: 0xe4d38c7193ef3f7d (16488677080174641021)
+
+sha256 filer flodversion=2 tidsmodell=2 t=500000:
+d288d90fc6e85a582a1e9a6653ac8dbe796fa8b693e8ea4816d17514a13a96a8  balte_andel.f32
+c88f00c557ef385de63558dbac042b82d38def02b955b7b423cc767a8c16bd31  fara_andel.f32
+53cb8ebcdfeb261c6fb7c866c1bf100436bc6f00a2cc4beb5fdbad93508cc79d  foror.tsv
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+d006f64ced8b25a5bcadbdd18c39e70243e4d5a8c5ded3810d7e9524476747f9  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+e80232b4d18d0bb7e794be263ba937626f383f9917d4b8a737ba893a8f752293  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+03851a8921ef80c0898c649fab0a9371117a0f461a64b3ccf07f154ca467bf92  vall_andel.f32
+50f0bd30c715dc8ceeb51ad7f236cb42b0d99738819e963d22a00edb18d08789  vall_hojd.f32
+cf1999f7386a340508dc782c26f9b82124f5878a0f065af3da92b26cae049e3d  vattentyp.u8
+6022ef5b311bfa1f9c5efb277f4d1ceccf0c67c5dfb6423ab062df4d210c2539  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+33bf058d02c56da00d199ec1aaf8693ab75bd60008f8b0687514969ed4bdc0c6  vaxtgrupper.json
+6b58e76695e4704ad8f10d32886de53e0138be02af72a8670da3afbe1b10780a  vaxt_tathet.f32
+
+--- flodversion=2 tidsmodell=2 t=20000 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Ovre (Last)
+flodversion: 2
+tidsmodell: 2
+flodriktning: 1
+levande fåror: 1 3
+vattentyp Land: 2742
+vattentyp Flodfara: 0
+vattentyp Trask: 286
+vattentyp Sjo: 44
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.005210
+medel balte_andel: 0.020839
+medel vall_andel: 0.014581
+rutor med vall: 128
+medel vaxt_tathet lovtrad: 0.446289 (arter=6)
+medel vaxt_tathet barrtrad: 0.023275 (arter=2)
+medel vaxt_tathet ort: 0.098568 (arter=0)
+medel vaxt_tathet ormbunke: 0.022507 (arter=4)
+medel vaxt_tathet kottepalm_ginkgo: 0.008926 (arter=1)
+medel vaxt_tathet vattenvaxt: 0.013607 (arter=3)
+Land-rutor med örttäthet 0,30: 0
+fåra 1: bredd_m=149.202516 balte_m=596.810066 vall_m=596.810066 rutor=64
+fåra 3: bredd_m=238.418326 balte_m=953.673305 vall_m=600.000000 rutor=64
+skrev 3D-filer till /tmp/lopp1395-fore/v2-tm2-t20000 (kontrollsumma 12979197932485047536)
+kontrollsumma: 0xb41f5fc0bb4174f0 (12979197932485047536)
+
+sha256 filer flodversion=2 tidsmodell=2 t=20000:
+f93c4c6cbf66e6bc93329f94285745fc5738ddb7fa7590ca55389fab6428c87a  balte_andel.f32
+07e5a96715af5cb2d9703b66f9502d79d0a81d4df750bcef3afb24251812a316  fara_andel.f32
+634cc240eb141476255931365f558b57c884de0de619e7bf2e8c46031e9c0cc1  foror.tsv
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+41a7b297a5bfcaabc4ff174a9a723182a0277f1dd6eaa87e331d1fb9d769e6a4  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+f40ae0b5c3ef9b289d6ae6643c8432e77994ad72118031aa7a28aa1357efd88c  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+38b6110c5599572442535593c71f739dc512949fd4eaf6952eae46de04376394  vall_andel.f32
+be03336d5f7513f577738898482e8be3edd5134b5823bb1e812165373a9804db  vall_hojd.f32
+8ec98a0122b691bbe3f232204e1f384f840a441e35eb5a8082e6663f47146b74  vattentyp.u8
+25e9999ad1dbf7095f35111d5065b9015344392e8c8a0b4e0ee7b35f5cdad5c2  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+33bf058d02c56da00d199ec1aaf8693ab75bd60008f8b0687514969ed4bdc0c6  vaxtgrupper.json
+0f0605f0ade33c7665c2fd2e8b3dbfabb598127dbbad280527ff9c823ece7db9  vaxt_tathet.f32
+
+--- flodversion=2 tidsmodell=2 t=0 ---
+storlek: 64 × 48 = 3072 rutor
+höjd: lägst 123.2 m, högst 236.9 m
+andel hav: 0.0000 (0/3072)
+period: Gransen (Last)
+flodversion: 2
+tidsmodell: 2
+flodriktning: 1
+levande fåror: 1 3
+vattentyp Land: 2736
+vattentyp Flodfara: 0
+vattentyp Trask: 279
+vattentyp Sjo: 57
+vattentyp Brackt: 0
+vattentyp Hav: 0
+medel fara_andel: 0.005210
+medel balte_andel: 0.020839
+medel vall_andel: 0.014581
+rutor med vall: 128
+medel vaxt_tathet lovtrad: 0.445312 (arter=6)
+medel vaxt_tathet barrtrad: 0.022705 (arter=2)
+medel vaxt_tathet ort: 0.098145 (arter=0)
+medel vaxt_tathet ormbunke: 0.022354 (arter=4)
+medel vaxt_tathet kottepalm_ginkgo: 0.008906 (arter=1)
+medel vaxt_tathet vattenvaxt: 0.014648 (arter=3)
+Land-rutor med örttäthet 0,30: 0
+fåra 1: bredd_m=149.202516 balte_m=596.810066 vall_m=596.810066 rutor=64
+fåra 3: bredd_m=238.418326 balte_m=953.673305 vall_m=600.000000 rutor=64
+skrev 3D-filer till /tmp/lopp1395-fore/v2-tm2-t0 (kontrollsumma 4137533231059569900)
+kontrollsumma: 0x396b788d53ae0cec (4137533231059569900)
+
+sha256 filer flodversion=2 tidsmodell=2 t=0:
+f93c4c6cbf66e6bc93329f94285745fc5738ddb7fa7590ca55389fab6428c87a  balte_andel.f32
+07e5a96715af5cb2d9703b66f9502d79d0a81d4df750bcef3afb24251812a316  fara_andel.f32
+634cc240eb141476255931365f558b57c884de0de619e7bf2e8c46031e9c0cc1  foror.tsv
+9d33ea2a7e8169377da645ed7bc501753526b43a9b6a29d01d6e9b3ea58acdf0  hojd.f32
+2a90aa0d688d6e373388d9326dfb04efa70990809d560c77d5ddf9f45935e750  hojd.png
+f3e6009dcaa901de26275d0cae62125cc9d361e6ac419b1b4d295827074c62f2  karta.json
+14382bbee04fa96ecc9e5e05b307eb084c060346880e5a24cd6cdc02eb74331a  mark.f32
+65e412792ceef5f6a2d4fc2ae237917575d38412290dc694c2890c6857a541bb  period.u8
+a3a86e19aba7e1a5c181dcf04453030428da1a2a56e0a98b266a1ceac1faa4f6  strand.json
+38b6110c5599572442535593c71f739dc512949fd4eaf6952eae46de04376394  vall_andel.f32
+be03336d5f7513f577738898482e8be3edd5134b5823bb1e812165373a9804db  vall_hojd.f32
+a1c7fff11f4891e84271eb3e9fe7523e3603f1d44414791d6869e6a164be8e26  vattentyp.u8
+c61fd8503538404b9d137c0887ee25c254e644b3ac7ade71b4153a8479ed5608  vatten_yta.f32
+2539e3b2ac17082d709bf08d8b93b80ea3d6d8104bb18f93a3c3579a27272770  vaxt.f32
+33bf058d02c56da00d199ec1aaf8693ab75bd60008f8b0687514969ed4bdc0c6  vaxtgrupper.json
+5b27fd496952585681f6b1857e8994e6e384ed3ae9b107d54c2ed6cd20bc6e6f  vaxt_tathet.f32
+
+
+=== Prov 2: hcsim slutsummor före ===
+kommando: hcsim kor --lat0 47 --lon0 -108 --b 64 --h 48 --ruta-m 2000 --t 500000 --fro 181 --ar 5 --n0 400
+ar=5 antal=5548 fodda=34303 dod_svalt=29085 dod_alder=70 v_medel=76.04392061285031
+{"fro":181,"ar":5,"n0":400,"slut_antal":5548,"djur_summa":4225976351498359620,"karta_summa":9828389463751256610,"ar_rader":[{"ar":5,"antal":5548,"fodda":34303,"dod_svalt":29085,"dod_alder":70,"v_medel":76.04392061285031}]}

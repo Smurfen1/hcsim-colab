@@ -1,0 +1,10 @@
+# ar_fore_gransen	handelse	varde	kalla	marke   (skriven av bygg_tidtabell.py i piharness docs/evolution; tom tid = okänd)
+1081000	basen	formationens bas (minimiålder)	Roberts m.fl. 2026, doi:10.1371/journal.pone.0328861	läst
+908000	aska	askskikt i nedre delen	Roberts m.fl. 2026	läst
+829000	aska	askskikt i nedre delen	Roberts m.fl. 2026	läst
+290000	magnetvandning	C30n/C29r; period: övre börjar (Sprains ålder i Montana; Roberts omräkning 66,48)	Sprain m.fl., citerad i Roberts m.fl. 2026	läst
+268000	aska	aska i Null-kolet	Sprain m.fl., citerad i Roberts m.fl. 2026	läst
+0	gransen	K-Pg-gränsen; period: gränsen	Clyde m.fl., citerad i Roberts m.fl. 2026	läst
+	hav_breien	havet i North Dakota-delen under den nedre–mellersta delen; tid och utbredning okända	DePalma m.fl. 2019, doi:10.1073/pnas.1817407116	simulering
+	hav_cantapeta	havet i North Dakota-delen under den övre (inte översta) delen; tid och utbredning okända	DePalma m.fl. 2019	simulering
+	inget_hav_montana	inget hav i centrala Montana i den nedre delen	Roberts m.fl. 2026	läst

@@ -1,0 +1,12 @@
+[package]
+name = "hckarta"
+version = "0.1.0"
+edition = "2021"
+description = "Rutnät över Hell Creek vid tiden t (år före K-Pg): höjd/hav ur PaleoDEM; period ur tidtabellen; 3D-filer (S3); flodnät ur frö (S4); övriga lager simulering."
+
+[dependencies]
+paleokarta = { path = "../paleokarta" }
+
+[[bin]]
+name = "hckarta"
+path = "src/main.rs"

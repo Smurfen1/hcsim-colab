@@ -1,0 +1,45 @@
+# namn	varde	enhet	marke	kalla	anm
+# Alt 1197: talens ursprung. marke = last | simulering. Densitetstal per plätt × (ruta_km² / PLATT_KM2).
+# Rättat av Claude 2026-11-21 01:2x: "last" betyder en läst yttre källa; låsets och kodens egna val är simulering. Kvar som last: BREDD, LUTNING, T_MEDEL, T_AMPL (låset citerar källor).
+VMAX	100.0	biomassa/plätt	simulering	låset v3.0 punkt 3; flockdal.rs grund() (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	räknas om till per km² via PLATT_KM2
+R_V	0.04	1/steg	simulering	låset v3.0 punkt 3; flockdal.rs (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	tillväxttal i vaxer_med
+SOL	0.02	biomassa/steg	simulering	låset v3.0 punkt 3; flockdal.rs (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	solbidrag; skalas med tak/VMAX i hcsim
+FRO	0.9	1	simulering	låset v3.0 punkt 3; flockdal.rs (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	utan möss: fr = 1−FRO
+AT_DINO	0.4	biomassa/dino	simulering	låset v3.0 punkt 3; flockdal.rs betas (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	vill = AT_DINO·V/VMAX
+E_VAXT	8.0	energi/biomassa	simulering	låset v3.0 punkt 3; bete5 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	intag = E_VAXT·at
+E_START	120.0	energi	simulering	låset v3.0 punkt 3 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	unge och start
+E_DELA	240.0	energi	simulering	låset v3.0 punkt 3; fortplantning8 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	hona betalar E_DELA/2
+E_HANE	960.0	energi	simulering	låset punkt 14.7 (förprov 6) (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	tak efter födsel
+LIV	3000	steg	simulering	låset punkt 14.6; flockdal (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	livslängd
+LITEN	600	steg	simulering	låset punkt 2; flockdal dal7 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	mogen för parning
+STEG_PER_AR	150	steg/år	simulering	låset punkt 14.6 (LIV/20) (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	ett år = 150 steg
+KOST_STEG	1.0	energi/steg	simulering	flockdal.rs bete5 (e += a − 1) (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	basskostnad
+HJ_ANDEL	0.01	1	simulering	didel.rs (pris = 0,01·kost/OPS) (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	hjärnans energipris
+KOST_TRASK	0.5	energi	simulering	eget val S5b	extra kostnad träsk
+KOST_FLOD	1.0	energi	simulering	eget val S5b	extra kostnad flodfåra
+KOST_SJO	1.0	energi	simulering	eget val S5b	extra kostnad sjö
+PLATT_KM2	0.25	km²	simulering	eget val Alt 1197	plättens yta saknar läst källa
+BREDD	50.0	grader	last	låset punkt 14.1 (During 2022 / Wilf 2003)	paleobredd Hell Creek
+LUTNING	23.13	grader	last	låset punkt 14.2 (La2004 medel)	axellutning
+T_MEDEL	12.5	°C	last	låset punkt 14.3 (Wilf 2003 12–13 °C)	årsmedel
+T_AMPL	7.0	°C	last	låset punkt 14.3 (During andrahand)	amplitud A=7
+T_FORSKJ_DYGN	30.0	dygn	simulering	låset punkt 14.3 Claudes val	t_max efter sommarsolstånd
+VAT_VINTER	1.0	bool	simulering	låset punkt 14.4 modell	våt vinter
+W_TORR	0.5	1	simulering	låset punkt 14.4 Claudes val	torrfaktor
+PLATT	0.0	bool	simulering	klimat.rs / dal8 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	0 = årstidsvariation på
+DYGN	365.25	dygn/år	simulering	låset punkt 14.3 förenkling	som i dag
+PUNKTER	36525	1	simulering	klimat.rs rad 6; låset 14.2 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	årsmedelssteg
+Z_N	4	1	simulering	hjarna.rs Alt 380	inre bildens storlek
+ETA	0.05	1	simulering	hjarna.rs	inlärningens steglängd
+SIGMA0	0.5	1	simulering	hjarna.rs	startgener
+SIGMA_MUT	0.05	1	simulering	hjarna.rs	ändring vid arv
+V0_ANDEL	0.6	1	simulering	flockdal V0/VMAX = 60/100 (eget val i låset eller koden, ingen yttre källa; Claude 2026-11-21)	startväxt / tak
+A_N	9	1	simulering	S5b uppdrag	handlingar: stå + 8 grannar
+S_N	19	1	simulering	S5b uppdrag	9·(V/tak, n/4) + energi/tak
+MARKT_RABATT	0.9	1	simulering	Alt 1198 populationssvep (eget val)	märkta betalar 0,9 · KOST_STEG i positivarmen
+MARKT_INKOR_AR	30	år	simulering	Alt 1198 populationssvep (eget val)	inkörning före märkning
+MARKT_EFTER_AR	150	år	simulering	Alt 1198 populationssvep (eget val)	år efter märkningen
+TABELL_VIKT	0.1	1	simulering	hjärnprovet Alt 1200 underlag (eget val)	glidande medel-vikt i minnestabellen
+TABELL_SLUMP_P	0.1	1	simulering	hjärnprovet Alt 1200 underlag (eget val)	sannolikhet för slumpvis handling i tabellen
+SPEGEL_TOL	0.116	1	simulering	hjärnprovet underlag (3·0,123·√2/√20 ur svepets nollarm)	spegelns medel av (andel+spegelandel) inom 1±detta
+LASARE_ETA	0.05	1	simulering	avläsarprovet Alt 1213 (eget val; samma som ETA)	steglängd för intagsläsarens vikter

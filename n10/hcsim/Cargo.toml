@@ -1,0 +1,63 @@
+[package]
+name = "hcsim"
+version = "0.1.0"
+edition = "2021"
+description = "Simulering på Hell Creek-kartan: växter per ruta och Edmontosaurus med JEPA-hjärna (S5a/S5b)."
+
+[dependencies]
+hckarta = { path = "../hckarta" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+[[bin]]
+name = "hcsim"
+path = "src/main.rs"
+
+[[bin]]
+name = "ledprov_r2"
+path = "src/bin/ledprov_r2.rs"
+
+[[bin]]
+name = "rang_r"
+path = "src/bin/rang_r.rs"
+
+[[bin]]
+name = "omlas_r"
+path = "src/bin/omlas_r.rs"
+
+[[bin]]
+name = "signal_r"
+path = "src/bin/signal_r.rs"
+
+[[bin]]
+name = "hjarnvakt"
+path = "src/bin/hjarnvakt.rs"
+
+[[bin]]
+name = "kartvy"
+path = "src/bin/kartvy.rs"
+
+[[bin]]
+name = "hjarntid"
+path = "src/bin/hjarntid.rs"
+
+[[bin]]
+name = "utdod"
+path = "src/bin/utdod.rs"
+
+[[bin]]
+name = "vmodell"
+path = "src/bin/vmodell.rs"
+
+[[bin]]
+name = "vmodell_analys"
+path = "src/bin/vmodell_analys.rs"
+
+[[bin]]
+name = "vminfo"
+path = "src/bin/vminfo.rs"
+
+[[bin]]
+name = "provvy"
+path = "src/bin/provvy.rs"

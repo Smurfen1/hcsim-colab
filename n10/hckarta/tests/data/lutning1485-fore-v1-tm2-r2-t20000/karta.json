@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "omrade": {
+    "lat0": 47.0,
+    "lon0": -108.0,
+    "b": 64,
+    "h": 48,
+    "ruta_m": 2000.0
+  },
+  "t": 20000.0,
+  "varde_galler": "rutans mitt (mittpunkten flyttas till 66 miljoner år sedan och läses där)",
+  "lager": {
+    "hojd": {"fil": "hojd.f32", "typ": "f32", "enhet": "m över havsytan", "nodata": null, "marke": "läst"},
+    "vatten_yta": {"fil": "vatten_yta.f32", "typ": "f32", "enhet": "m över havsytan", "nodata": null, "marke": "simulering"},
+    "vattentyp": {"fil": "vattentyp.u8", "typ": "u8", "enhet": "kod: 0 land, 1 flodfåra, 2 träsk, 3 sjö, 4 bräckt, 5 hav", "nodata": null, "marke": "simulering"},
+    "mark": {"fil": "mark.f32", "typ": "f32x4", "enhet": "andelar 0..1: sand, silt, lera, torv", "nodata": null, "marke": "simulering"},
+    "vaxt": {"fil": "vaxt.f32", "typ": "f32", "enhet": "täthet 0..1", "nodata": null, "marke": "simulering"},
+    "period": {"fil": "period.u8", "typ": "u8", "enhet": "kod: 0 äldre, 1 övre, 2 gränsen", "nodata": null, "marke": "läst"}
+  },
+  "period": "Ovre",
+  "kontrollsumma": "16816718513338608669",
+  "hojd_png": {
+    "fil": "hojd.png",
+    "skala": "(hojd_m + 1000) * 10",
+    "offset_m": 1000.0,
+    "faktor": 10.0
+  },
+  "strand": {"fil": "strand.json"}
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=hcsim: visningskörningen som kartvyn visar live (Håkan 2026-11-22: "den ska alltid vara startad"; Alt 1703)
+
+[Service]
+# Skriver kartan till work/hcsim/kartbild-live.json och tidsskiftet till kartbild-live.json.tidsskift.db (högst 600 lägen).
+# Körningen sparar inget läge: efter en omstart börjar den om från år 0.
+WorkingDirectory=/home/hakan/sandbox/pi/n10/hcsim
+ExecStart=/home/hakan/sandbox/pi/n10/hcsim/target/release/hcsim kartbild --arm e_lar --fro 261 --var-steg 30 --historik-s 10 --ar 979000 --ut /home/hakan/sandbox/pi/work/hcsim/kartbild-live.json
+Nice=10
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
