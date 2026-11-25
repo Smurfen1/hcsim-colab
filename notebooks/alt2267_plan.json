@@ -1,0 +1,33 @@
+{
+  "status": "vantar_pa_alt2260",
+  "gren": "ej_vald_an",
+  "kommando": "sparb2267",
+  "inkor": 10,
+  "ar": 50,
+  "block": [
+    {
+      "id": 1,
+      "fron": "261-265",
+      "json_fil": "alt2267-b1.json",
+      "md_fil": "alt2267-b1.md"
+    },
+    {
+      "id": 2,
+      "fron": "266-270",
+      "json_fil": "alt2267-b2.json",
+      "md_fil": "alt2267-b2.md"
+    },
+    {
+      "id": 3,
+      "fron": "271-275",
+      "json_fil": "alt2267-b3.json",
+      "md_fil": "alt2267-b3.md"
+    },
+    {
+      "id": 4,
+      "fron": "276-280",
+      "json_fil": "alt2267-b4.json",
+      "md_fil": "alt2267-b4.md"
+    }
+  ]
+}

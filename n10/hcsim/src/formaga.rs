@@ -62,6 +62,10 @@ pub enum Formaga {
     Stryk2144D2(f64, u16),
     /// Alt 2223 arvskontroll: samma som `Lar2144D2(eps, alpha_tio)` men ungar får slumpade gener vid födseln i stället för arv.
     Lar2144D2SlumpGen(f64, u16),
+    /// Alt 2267: `Lar2144D2(eps, alpha_tio)` + LeCuns lärda kritiker (ärvd startinstinkt `v` + livstids-RLS mot egen netto-ΔE).
+    Lar2267Krit(f64, u16),
+    /// Alt 2267 strykprov: exakt samma lärda kritiker som `Lar2267Krit`, men världsmodellen avstängd i handlingsvalet.
+    Stryk2267Krit(f64, u16),
     /// Enkel stillastående-baslinje utan hjärna (Regel 14): väljer `a = 0` med sannolikhet `p`, annars jämnt bland `1..8`.
     StannaSlump(f64),
 }
@@ -95,6 +99,8 @@ impl Formaga {
             Formaga::Lar2199Osak(p, a, l) => format!("lar2199_osak({p}, {a}, {l})"),
             Formaga::Stryk2144D2(p, a) => format!("stryk2144_d2({p}, {a})"),
             Formaga::Lar2144D2SlumpGen(p, a) => format!("lar2144_d2_slumpgen({p}, {a})"),
+            Formaga::Lar2267Krit(p, a) => format!("lar2267_krit({p}, {a})"),
+            Formaga::Stryk2267Krit(p, a) => format!("stryk2267_krit({p}, {a})"),
             Formaga::StannaSlump(p) => format!("stanna_slump({p})"),
         }
     }
@@ -122,6 +128,8 @@ impl Formaga {
                 | Formaga::Lar2199Osak(_, _, _)
                 | Formaga::Stryk2144D2(_, _)
                 | Formaga::Lar2144D2SlumpGen(_, _)
+                | Formaga::Lar2267Krit(_, _)
+                | Formaga::Stryk2267Krit(_, _)
         )
     }
 
@@ -144,6 +152,8 @@ impl Formaga {
                 | Formaga::Lar2199Osak(_, _, _)
                 | Formaga::Stryk2144D2(_, _)
                 | Formaga::Lar2144D2SlumpGen(_, _)
+                | Formaga::Lar2267Krit(_, _)
+                | Formaga::Stryk2267Krit(_, _)
         )
     }
 
@@ -174,6 +184,7 @@ impl Formaga {
                 rls_fristaende: false,
                 rls_alpha_tio: 0,
                 norm_lage: 0,
+                med_kritiker: false,
             }),
             Formaga::Lar2144D2(_, alpha_tio)
             | Formaga::Lar2199Osak(_, alpha_tio, _)
@@ -192,6 +203,24 @@ impl Formaga {
                     rls_fristaende: true,
                     rls_alpha_tio: alpha_tio,
                     norm_lage: 0,
+                    med_kritiker: false,
+                })
+            }
+            Formaga::Lar2267Krit(_, alpha_tio) | Formaga::Stryk2267Krit(_, alpha_tio) => {
+                Some(crate::hjarna2008::Hj2008Config {
+                    lar_kodare: false,
+                    med_idm: false,
+                    additiv_endast: false,
+                    stryk_handling_i_val: matches!(self, Formaga::Stryk2267Krit(_, _)),
+                    med_kanalgrind: true,
+                    stryk_djurantal_diagnos: false,
+                    skarp_kanalgrind: true,
+                    med_z_norm: true,
+                    med_rls: true,
+                    rls_fristaende: true,
+                    rls_alpha_tio: alpha_tio,
+                    norm_lage: 0,
+                    med_kritiker: true,
                 })
             }
             Formaga::Lar2172Norm(_, alpha_tio, norm_lage) => Some(crate::hjarna2008::Hj2008Config {
@@ -207,6 +236,7 @@ impl Formaga {
                 rls_fristaende: true,
                 rls_alpha_tio: alpha_tio,
                 norm_lage,
+                med_kritiker: false,
             }),
             _ => None,
         }

@@ -27,6 +27,8 @@ const ETA_ZNORM: f64 = 0.05;
 const LAMBDA_RLS: f64 = 0.99;
 const ALPHA_DELAD: f64 = 2.0;
 const ALPHA_AKT: f64 = 8.0;
+const LAMBDA_KRIT: f64 = 0.99;
+const ALPHA_KRIT: f64 = 4.0;
 
 const IDM_DIM: usize = Z_N * Z_N + Z_N + 1;
 
@@ -52,6 +54,8 @@ pub struct Hj2008Config {
     pub rls_alpha_tio: u16,
     #[serde(default)]
     pub norm_lage: u8,
+    #[serde(default)]
+    pub med_kritiker: bool,
 }
 
 impl Default for Hj2008Config {
@@ -69,6 +73,7 @@ impl Default for Hj2008Config {
             rls_fristaende: false,
             rls_alpha_tio: 0,
             norm_lage: 0,
+            med_kritiker: false,
         }
     }
 }
@@ -93,8 +98,23 @@ pub struct Hj2008 {
     pub p_rls_akt: Vec<[[f64; Z_N + 1]; Z_N + 1]>,
     /// Buffertfri IDM: [A_N][IDM_DIM].
     pub w_idm: Vec<[f64; IDM_DIM]>,
-    /// Ärvd avläsare `v` [Z_N + 1] (Alt 1107; lärs aldrig).
+    /// Ärvd avläsare `v` [Z_N + 1] (Alt 1107; startinstinkt som aldrig muteras i generna).
     pub v: [f64; Z_N + 1],
+    /// Alt 2267: lärd kritiker (residual-RLS ovanpå ärvd startinstinkt `v`; används bara när `cfg.med_kritiker == true`).
+    #[serde(default)]
+    pub w_krit: [f64; Z_N + 1],
+    #[serde(default)]
+    pub p_krit: [[f64; Z_N + 1]; Z_N + 1],
+    #[serde(skip)]
+    pub vanta_beloning: Option<f64>,
+    #[serde(skip)]
+    pub krit_n: u64,
+    #[serde(skip)]
+    pub krit_sy: f64,
+    #[serde(skip)]
+    pub krit_sy2: f64,
+    #[serde(skip)]
+    pub krit_se2: f64,
     /// Kausal löpande z-skalning (Alt 2005).
     pub skala_init: bool,
     pub mu: [f64; S_N],
@@ -174,6 +194,40 @@ fn rls_uppdatera(
     }
 }
 
+fn rls_uppdatera_skalar(
+    w: &mut [f64; Z_N + 1],
+    p: &mut [[f64; Z_N + 1]; Z_N + 1],
+    x: &[f64; Z_N + 1],
+    err: f64,
+    lambda: f64,
+) {
+    let mut px = [0.0; Z_N + 1];
+    for m in 0..=Z_N {
+        px[m] = (0..=Z_N).map(|n| p[m][n] * x[n]).sum();
+    }
+    let denom = (lambda + (0..=Z_N).map(|m| x[m] * px[m]).sum::<f64>()).max(1e-9);
+    let mut gain = [0.0; Z_N + 1];
+    for m in 0..=Z_N {
+        gain[m] = px[m] / denom;
+        w[m] += err * gain[m];
+    }
+    for m in 0..=Z_N {
+        for n in 0..=Z_N {
+            p[m][n] = (p[m][n] - gain[m] * px[n]) / lambda;
+        }
+    }
+    for m in 0..=Z_N {
+        for n in 0..m {
+            let sym = 0.5 * (p[m][n] + p[n][m]);
+            p[m][n] = sym;
+            p[n][m] = sym;
+        }
+        if p[m][m] > 1e3 {
+            p[m][m] = 1e3;
+        }
+    }
+}
+
 impl Hj2008 {
     pub fn fran_gen(gen: &[f64], cfg: Hj2008Config) -> Self {
         let inv_sqrt_sn = 1.0 / (S_N as f64).sqrt();
@@ -205,6 +259,13 @@ impl Hj2008 {
             p_rls_akt: vec![diag_p(alpha_akt); A_N],
             w_idm: vec![[0.0; IDM_DIM]; A_N],
             v,
+            w_krit: [0.0; Z_N + 1],
+            p_krit: diag_p(ALPHA_KRIT),
+            vanta_beloning: None,
+            krit_n: 0,
+            krit_sy: 0.0,
+            krit_sy2: 0.0,
+            krit_se2: 0.0,
             skala_init: false,
             mu: [0.0; S_N],
             var: [1.0; S_N],
@@ -544,7 +605,26 @@ impl Hj2008 {
     }
 
     pub fn varde(&self, y: &[f64; Z_N]) -> f64 {
-        self.v[Z_N] + (0..Z_N).map(|j| self.v[j] * y[j]).sum::<f64>()
+        if self.cfg.med_kritiker {
+            (self.v[Z_N] + self.w_krit[Z_N])
+                + (0..Z_N).map(|j| (self.v[j] + self.w_krit[j]) * y[j]).sum::<f64>()
+        } else {
+            self.v[Z_N] + (0..Z_N).map(|j| self.v[j] * y[j]).sum::<f64>()
+        }
+    }
+
+    /// Online förklaringsgrad R² för den lärda kritikern (enbart läsande diagnostik).
+    pub fn krit_r2(&self) -> f64 {
+        if self.krit_n < 20 {
+            return f64::NAN;
+        }
+        let n = self.krit_n as f64;
+        let my = self.krit_sy / n;
+        let ss_tot = self.krit_sy2 - n * my * my;
+        if ss_tot <= 1e-9 {
+            return f64::NAN;
+        }
+        1.0 - self.krit_se2 / ss_tot
     }
 
     fn idm_feat(z_prev: &[f64; Z_N], z_now: &[f64; Z_N]) -> [f64; IDM_DIM] {
@@ -614,6 +694,23 @@ impl Hj2008 {
 
         if !lar {
             return;
+        }
+
+        // 0. Alt 2267: uppdatera lärd kritiker på den verkliga nya inre bilden z_mal och förra stegets netto-ΔE.
+        if self.cfg.med_kritiker {
+            if let Some(r_raw) = self.vanta_beloning.take() {
+                let r = r_raw.clamp(-10.0, 10.0);
+                let pred_k = self.varde(&z_mal);
+                let err_k = r - pred_k;
+                if self.steg >= 100 {
+                    self.krit_n += 1;
+                    self.krit_sy += r;
+                    self.krit_sy2 += r * r;
+                    self.krit_se2 += err_k * err_k;
+                }
+                let x_k = [z_mal[0], z_mal[1], z_mal[2], z_mal[3], 1.0];
+                rls_uppdatera_skalar(&mut self.w_krit, &mut self.p_krit, &x_k, err_k, LAMBDA_KRIT);
+            }
         }
 
         // 1. Gradienter in i W_k (beräknade före uppdatering av förutsägare/IDM).
@@ -1669,6 +1766,7 @@ mod prov {
             rls_fristaende: true,
             rls_alpha_tio: 40,
             norm_lage: 0,
+            med_kritiker: false,
         };
         let mut hj = Hj2008::fran_gen(&slump_gen(2144), cfg);
         let mut g = Rng::new(2144);
@@ -2259,5 +2357,62 @@ mod prov {
         let (tot_iso, kors_iso) = kor(true);
         assert!(tot_kors > 10 && kors_kors > 0, "fri parning ska ge korsparningar: {kors_kors}/{tot_kors}");
         assert!(tot_iso > 10 && kors_iso == 0, "linjeparning måste ge 0 korsparningar: {kors_iso}/{tot_iso}");
+    }
+
+    #[test]
+    fn alt2267_kritiker_lar_sig_vaxtbeloning_och_bevarar_gener() {
+        let mut g = Rng::new(2267);
+        let mut karta = [[0.0; 10]; 10];
+        for (i, r) in karta.iter_mut().enumerate() {
+            for (j, c) in r.iter_mut().enumerate() {
+                *c = 0.5
+                    + 0.35 * (std::f64::consts::TAU * i as f64 / 10.0).sin()
+                        * (std::f64::consts::TAU * j as f64 / 10.0).cos()
+                    + 0.15 * (std::f64::consts::TAU * (i + j) as f64 / 10.0).cos();
+            }
+        }
+        let gen = slump_gen(2267);
+        let cfg = crate::formaga::Formaga::Lar2267Krit(0.20, 40).cfg_2059().unwrap();
+        let mut hj = Hj2008::fran_gen(&gen, cfg);
+        let v0_kopia = hj.v;
+        // Dag 0 (före erfarenhet): varde måste exakt matcha ärvd startinstinkt v0.
+        let z_prov = [0.5, -0.3, 0.2, 0.7];
+        let v0_val = v0_kopia[Z_N] + (0..Z_N).map(|j| v0_kopia[j] * z_prov[j]).sum::<f64>();
+        assert!((hj.varde(&z_prov) - v0_val).abs() < 1e-12, "dag 0 ska följa ärvd startinstinkt");
+
+        let (mut x, mut y) = (5i32, 5i32);
+        let mut forra_bel = None;
+        for _ in 0..800 {
+            let s = syntetisk_varld(&karta, x, y, &mut g);
+            hj.vanta_beloning = forra_bel;
+            let a = if g.f() < 0.25 {
+                let am = hj.minst_besokta_handling(&mut g);
+                hj.lar_och_satt(&s, true, am);
+                am
+            } else {
+                hj.valj_lott(&s, true, &mut g)
+            };
+            let (di, dj) = GRANNAR[a];
+            x += di;
+            y += dj;
+            let ii = x.rem_euclid(10) as usize;
+            let jj = y.rem_euclid(10) as usize;
+            forra_bel = Some(2.0 * karta[ii][jj] - 1.0);
+        }
+        // Generna (v0) får aldrig ändras (ingen Lamarckism).
+        assert_eq!(hj.v, v0_kopia, "ärvd startinstinkt v0 får aldrig muteras av livstidsinlärning");
+        // Kritikern måste ha lärt sig förutsäga belöningen positivt utan NaN.
+        let kr2 = hj.krit_r2();
+        assert!(kr2.is_finite() && kr2 > 0.35, "kritikern ska få stark positiv R² på syntetisk växtbelöning, fick {kr2}");
+        assert!(hj.w_krit.iter().all(|x| x.is_finite()), "kritikervikter får inte bli NaN/inf");
+
+        // Röd kontroll: utan med_kritiker ändras aldrig w_krit och krit_r2 är NaN.
+        let cfg_utan = crate::formaga::Formaga::Lar2144D2(0.20, 40).cfg_2059().unwrap();
+        let mut hj_utan = Hj2008::fran_gen(&gen, cfg_utan);
+        let s0 = syntetisk_varld(&karta, 5, 5, &mut g);
+        hj_utan.vanta_beloning = Some(1.0);
+        let _ = hj_utan.valj_lott(&s0, true, &mut g);
+        assert_eq!(hj_utan.w_krit, [0.0; Z_N + 1]);
+        assert!(hj_utan.krit_r2().is_nan());
     }
 }

@@ -117,6 +117,11 @@ pub struct Dino {
     /// Alt 2059-hjärna (används bara av `Lar2059`, `Frusen2059`, `Stryk2059`).
     #[serde(default)]
     pub hj2059: Option<Box<Hj2008>>,
+    /// Alt 2267: energi före steget och ren fysiologisk nettoenergiändring efter betet (före födsel).
+    #[serde(skip)]
+    pub e_fore_steg: f64,
+    #[serde(skip)]
+    pub senaste_de: Option<f64>,
 }
 
 fn default_eps() -> f64 {
@@ -1087,6 +1092,8 @@ impl Sim {
                     hj_handlingar: [0; A_N],
                     steg_efter_mark: 0,
                     hj2059: None,
+                    e_fore_steg: 0.0,
+                    senaste_de: None,
                 });
                 nasta_uid += 1;
             }
@@ -1359,6 +1366,7 @@ impl Sim {
                 }
                 if d.formaga.cfg_2059().is_some() {
                     d.hj2059 = None;
+                    d.senaste_de = None;
                 }
             }
         }
@@ -1783,6 +1791,7 @@ impl Sim {
             // Hjärnvärden: läses efter valet (ingen världsändring; samma wp som vid valet).
             let hj_varden = self.hj_varden_alla(idx, &s);
             let hj_varde = hj_varden[a];
+            self.djur[idx].e_fore_steg = self.djur[idx].e;
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -1892,6 +1901,7 @@ impl Sim {
             let s = self.sinnen(i0, j0, self.djur[idx].e, &antal);
             let formaga = self.djur[idx].formaga;
             let a = self.valj_handling(idx, &s, &antal);
+            self.djur[idx].e_fore_steg = self.djur[idx].e;
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -1963,6 +1973,7 @@ impl Sim {
             let s = self.sinnen_med_v(i0, j0, self.djur[idx].e, &antal_start, &v_start);
             let formaga = self.djur[idx].formaga;
             let a = self.valj_handling(idx, &s, &antal_start);
+            self.djur[idx].e_fore_steg = self.djur[idx].e;
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -2049,6 +2060,7 @@ impl Sim {
             let a = self.valj_handling(idx, &s, &antal);
             let hj_varden = self.hj_varden_alla(idx, &s);
             let hj_varde = hj_varden[a];
+            self.djur[idx].e_fore_steg = self.djur[idx].e;
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -2135,6 +2147,7 @@ impl Sim {
         let intag = tal::E_VAXT * tagen;
         let kost = self.grundkostnad(self.djur[idx].markt);
         self.djur[idx].e += intag - kost;
+        self.djur[idx].senaste_de = Some(self.djur[idx].e - self.djur[idx].e_fore_steg);
         let formaga = self.djur[idx].formaga;
         if self.matning.pa && self.markering_skedd {
             self.matning.lagg_intag(formaga, intag);
@@ -2360,7 +2373,9 @@ impl Sim {
             | Formaga::Lar2144D2(eps, _)
             | Formaga::Lar2172Norm(eps, _, _)
             | Formaga::Stryk2144D2(eps, _)
-            | Formaga::Lar2144D2SlumpGen(eps, _) => {
+            | Formaga::Lar2144D2SlumpGen(eps, _)
+            | Formaga::Lar2267Krit(eps, _)
+            | Formaga::Stryk2267Krit(eps, _) => {
                 let cfg = formaga.cfg_2059().unwrap();
                 let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
                 let slump = eps > 0.0 && rng.f() < eps;
@@ -2371,6 +2386,9 @@ impl Sim {
                     }
                     let hj2 = d.hj2059.as_mut().unwrap();
                     hj2.cfg = cfg;
+                    if cfg.med_kritiker {
+                        hj2.vanta_beloning = d.senaste_de.take();
+                    }
                     if slump {
                         let a_m = hj2.minst_besokta_handling(&mut rng);
                         hj2.lar_och_satt(s, true, a_m);
@@ -2570,6 +2588,7 @@ impl Sim {
             let intag = tal::E_VAXT * at[c];
             let kost = self.grundkostnad(self.djur[i].markt);
             self.djur[i].e += intag - kost;
+            self.djur[i].senaste_de = Some(self.djur[i].e - self.djur[i].e_fore_steg);
             let formaga = self.djur[i].formaga;
             if self.matning.pa && self.markering_skedd {
                 self.matning.lagg_intag(formaga, intag);
@@ -2740,6 +2759,8 @@ impl Sim {
                 hj_handlingar: [0; A_N],
                 steg_efter_mark: 0,
                 hj2059: None,
+                e_fore_steg: 0.0,
+                senaste_de: None,
             };
             self.nasta_uid += 1;
             let formaga_unge = unge.formaga;
