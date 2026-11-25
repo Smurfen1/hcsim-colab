@@ -2216,4 +2216,48 @@ mod prov {
         assert_eq!(j["vaxt_grupper"].as_array().unwrap().len(), n);
         assert_eq!(j["vaxt_grupper_namn"].as_array().unwrap().len(), hckarta::VAXT_N);
     }
+
+    #[test]
+    fn alt2260_linjeparning_ger_noll_korsparning_och_bevarar_kors() {
+        use crate::formaga::{Formaga, HjarnArm};
+        use crate::sim::Sim;
+        use hckarta::{Karta, Lager, Marke, Omrade, Period, Vatten};
+
+        let n = 4 * 4;
+        let kart = Karta {
+            omrade: Omrade { lat0: 47.0, lon0: -108.0, b: 4, h: 4, ruta_m: 2000.0 },
+            t: 500_000.0,
+            hojd: Lager { varden: vec![100.0; n], marke: Marke::Last },
+            vatten_yta: Lager { varden: vec![100.0; n], marke: Marke::Last },
+            vattentyp: Lager { varden: vec![Vatten::Land; n], marke: Marke::Last },
+            mark: Lager { varden: vec![[0.25; 4]; n], marke: Marke::Simulering },
+            vaxt: Lager { varden: vec![1.0; n], marke: Marke::Simulering },
+            period: Lager { varden: vec![Period::Aldre; n], marke: Marke::Simulering },
+        };
+
+        let kor = |iso: bool| -> (u64, u64) {
+            let mut sim = Sim::fran_karta(&kart, 2260, 40);
+            sim.parning_inom_linje = iso;
+            sim.hjarn_arm = Some(HjarnArm {
+                namn: "prov2260",
+                markta: Formaga::Lar2144D2(0.20, 40),
+                omarkta: Formaga::Stryk2144D2(0.20, 40),
+                spegel: false,
+            });
+            for d in sim.djur.iter_mut() {
+                d.age = 700;
+                d.e = 500.0;
+            }
+            sim.markera_halften(2260);
+            for _ in 0..15 {
+                sim.steg();
+            }
+            (sim.parningar_totalt, sim.parningar_kors)
+        };
+
+        let (tot_kors, kors_kors) = kor(false);
+        let (tot_iso, kors_iso) = kor(true);
+        assert!(tot_kors > 10 && kors_kors > 0, "fri parning ska ge korsparningar: {kors_kors}/{tot_kors}");
+        assert!(tot_iso > 10 && kors_iso == 0, "linjeparning måste ge 0 korsparningar: {kors_iso}/{tot_iso}");
+    }
 }

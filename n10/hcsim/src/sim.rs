@@ -999,6 +999,15 @@ pub struct Sim {
     /// Valfria 6-grupps växttätheter per ruta ur `hckarta::rakna_vaxt_tathet` (för `kartbild-live.json`).
     #[serde(skip)]
     pub vaxt_grupper: Vec<[f32; hckarta::VAXT_N]>,
+    /// Alt 2260 (av som standard): när true väljs fadern bara bland hanar med samma `markt` som modern (reproduktiv isolering).
+    #[serde(skip)]
+    pub parning_inom_linje: bool,
+    /// Läsbar gendiagnostik (Alt 2258): antal genomförda födslar efter skapande/nollställning.
+    #[serde(skip)]
+    pub parningar_totalt: u64,
+    /// Läsbar gendiagnostik (Alt 2258): antal födslar där `far.markt != mor.markt`.
+    #[serde(skip)]
+    pub parningar_kors: u64,
 }
 
 impl Sim {
@@ -1132,6 +1141,9 @@ impl Sim {
             p_steg: Vec::new(),
             kron_tathet: Vec::new(),
             vaxt_grupper: Vec::new(),
+            parning_inom_linje: false,
+            parningar_totalt: 0,
+            parningar_kors: 0,
         }
     }
 
@@ -2630,7 +2642,11 @@ impl Sim {
                 if ni < 0 || nj < 0 || ni as usize >= self.b || nj as usize >= self.h {
                     continue;
                 }
-                kand.extend_from_slice(&hanar_i_cell[self.cell(ni as usize, nj as usize)]);
+                for &h_idx in &hanar_i_cell[self.cell(ni as usize, nj as usize)] {
+                    if !self.parning_inom_linje || self.djur[h_idx].markt == d.markt {
+                        kand.push(h_idx);
+                    }
+                }
             }
             if kand.is_empty() {
                 continue;
@@ -2689,6 +2705,10 @@ impl Sim {
                 continue;
             }
             let hona = self.g.f() < 0.5;
+            self.parningar_totalt += 1;
+            if self.djur[far].markt != self.djur[mor].markt {
+                self.parningar_kors += 1;
+            }
             let mut hj = Hj::arv(&self.djur[mor].hj.gen, &self.djur[far].hj.gen, &mut self.g);
             let markt = self.djur[mor].markt;
             let formaga = self.formaga_for(markt);

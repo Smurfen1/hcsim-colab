@@ -41,6 +41,7 @@ const EGEN_LOGG_2199: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2199/korning.
 const EGEN_LOGG_2223: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2223/korning.logg";
 const EGEN_LOGG_2238: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2238/korning.logg";
 const EGEN_LOGG_2249: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2249/korning.logg";
+const EGEN_LOGG_2260: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2260/korning.logg";
 const SPEGEL_LOGG: &str = "/home/hakan/sandbox/pi/work/hcsim/vminfo-0c11afa/korning.logg";
 
 static LOGG_LAS: Mutex<()> = Mutex::new(());
@@ -1362,8 +1363,35 @@ fn main() {
                 }
             }
         }
+        Some("sparb2260") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "261-280".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(100);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2260/sparb2260-resultat.md"));
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match kora_sparb2260(&fron, inkor_ar, tavling_ar, tradar) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    live_logg_med(EGEN_LOGG_2260, "Alt 2260", &format!("FEL i sparb2260: {e}"));
+                    eprintln!("FEL: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
         _ => {
-            eprintln!("användning: prov2008 spara|spara2053|spara2056|sparb|diag2059|sparb2073|kartbild2073|sparb2116|sparb2144|sparb2159|sparb2172|sparb2199|sparb2223|sparb2238|sparb2249 ...");
+            eprintln!("användning: prov2008 spara|spara2053|spara2056|sparb|diag2059|sparb2073|kartbild2073|sparb2116|sparb2144|sparb2159|sparb2172|sparb2199|sparb2223|sparb2238|sparb2249|sparb2260 ...");
             std::process::exit(2);
         }
     }
@@ -5532,6 +5560,395 @@ fn kora_sparb2249(fron: &[u64], inkor_ar: i64, tavling_ar: i64, tradar: usize) -
     let _ = writeln!(t, "- **Samlad dom:** **{dom}**");
 
     live_logg_med(EGEN_LOGG_2249, "Alt 2249", &format!("KLAR sparb2249 ({sec:.1}s): {dom}"));
+    Ok(t)
+}
+
+// ---------------------------------------------------------------- Alt 2260 (100-årstävling kors vs linjeparning, dubbel nollkontroll och gendiagnostik)
+
+#[derive(Clone, Default)]
+struct TavlingUtfall2260 {
+    slut_andel_fokus: f64,
+    medel_andel_fokus: f64,
+    energi_fokus: f64,
+    energi_mot: f64,
+    intag_fokus: f64,
+    intag_mot: f64,
+    slutpop: f64,
+    korspar_andel: f64,
+    v_norm_fokus: f64,
+    v_norm_mot: f64,
+    v_divergens: f64,
+    tidserie: Vec<(i64, f64, f64)>, // (ar, andel_fokus, v_divergens)
+}
+
+fn mat_v_diagnostik(sim: &Sim, fokus_ar_markt: bool) -> (f64, f64, f64) {
+    let v_start = hcsim::hjarna::NK + hcsim::hjarna::NP;
+    let v_len = Z_N + 1;
+    let mut norm_f = Vec::new();
+    let mut norm_m = Vec::new();
+    let mut sum_f = [0.0; Z_N + 1];
+    let mut sum_m = [0.0; Z_N + 1];
+    let (mut nf, mut nm) = (0usize, 0usize);
+    for d in sim.djur.iter().filter(|d| d.lev) {
+        if d.hj.gen.len() < v_start + v_len {
+            continue;
+        }
+        let sl = &d.hj.gen[v_start..v_start + v_len];
+        let norm = sl.iter().map(|x| x * x).sum::<f64>().sqrt();
+        if d.markt == fokus_ar_markt {
+            norm_f.push(norm);
+            for k in 0..v_len {
+                sum_f[k] += sl[k];
+            }
+            nf += 1;
+        } else {
+            norm_m.push(norm);
+            for k in 0..v_len {
+                sum_m[k] += sl[k];
+            }
+            nm += 1;
+        }
+    }
+    let nf_med = if norm_f.is_empty() { f64::NAN } else { median(norm_f) };
+    let nm_med = if norm_m.is_empty() { f64::NAN } else { median(norm_m) };
+    let div = if nf > 0 && nm > 0 {
+        (0..v_len)
+            .map(|k| {
+                let diff = sum_f[k] / nf as f64 - sum_m[k] / nm as f64;
+                diff * diff
+            })
+            .sum::<f64>()
+            .sqrt()
+    } else {
+        f64::NAN
+    };
+    (nf_med, nm_med, div)
+}
+
+fn sparb2260_en_arm(
+    sim_bas: &Sim,
+    fro: u64,
+    arm_namn: &'static str,
+    markta: Formaga,
+    omarkta: Formaga,
+    fokus_ar_markt: bool,
+    iso: bool,
+    tavling_ar: i64,
+    progress: Option<&(AtomicUsize, usize, std::time::Instant)>,
+) -> TavlingUtfall2260 {
+    let t0 = std::time::Instant::now();
+    let mut sim = sim_bas.clone();
+    sim.parning_inom_linje = iso;
+    sim.parningar_totalt = 0;
+    sim.parningar_kors = 0;
+    sim.hjarn_arm = Some(HjarnArm {
+        namn: arm_namn,
+        markta,
+        omarkta,
+        spegel: !fokus_ar_markt,
+    });
+    sim.markera_halften(fro);
+
+    let total_steg = tavling_ar.max(2) * STEG_PER_AR;
+    let fonster_ar = 10.min((tavling_ar / 2).max(1));
+    let fonster_start = total_steg - fonster_ar * STEG_PER_AR;
+    let mut knut_ar: Vec<i64> = (1..=5).map(|k| ((tavling_ar * k) / 5).max(1)).collect();
+    knut_ar.dedup();
+    let mut nasta_knut = 0usize;
+    let mut tidserie: Vec<(i64, f64, f64)> = Vec::with_capacity(knut_ar.len());
+
+    let (mut sum_andel, mut n_andel) = (0.0f64, 0u64);
+    let (mut sum_e_f, mut n_e_f, mut sum_e_m, mut n_e_m) = (0.0f64, 0u64, 0.0f64, 0u64);
+    let (mut sum_i_f, mut n_i_f, mut sum_i_m, mut n_i_m) = (0.0f64, 0u64, 0.0f64, 0u64);
+    let (mut bas_par_tot, mut bas_par_kors) = (0u64, 0u64);
+
+    for t in 0..total_steg {
+        if t == fonster_start {
+            bas_par_tot = sim.parningar_totalt;
+            bas_par_kors = sim.parningar_kors;
+        }
+        sim.steg();
+        if t >= fonster_start {
+            let (mut nf, mut nm) = (0usize, 0usize);
+            for d in sim.djur.iter().filter(|d| d.lev) {
+                if d.markt == fokus_ar_markt {
+                    nf += 1;
+                    sum_e_f += d.e;
+                    n_e_f += 1;
+                    if let Some(x) = d.forra_intag {
+                        sum_i_f += x;
+                        n_i_f += 1;
+                    }
+                } else {
+                    nm += 1;
+                    sum_e_m += d.e;
+                    n_e_m += 1;
+                    if let Some(x) = d.forra_intag {
+                        sum_i_m += x;
+                        n_i_m += 1;
+                    }
+                }
+            }
+            if nf + nm > 0 {
+                sum_andel += nf as f64 / (nf + nm) as f64;
+                n_andel += 1;
+            }
+        }
+        let ar_nu = (t + 1) / STEG_PER_AR;
+        if (t + 1) % STEG_PER_AR == 0 && nasta_knut < knut_ar.len() && ar_nu == knut_ar[nasta_knut] {
+            let (mut nf, mut tot) = (0usize, 0usize);
+            for d in sim.djur.iter().filter(|d| d.lev) {
+                tot += 1;
+                if d.markt == fokus_ar_markt {
+                    nf += 1;
+                }
+            }
+            let andel = if tot > 0 { nf as f64 / tot as f64 } else { f64::NAN };
+            let (_, _, div) = mat_v_diagnostik(&sim, fokus_ar_markt);
+            tidserie.push((ar_nu, andel, div));
+            nasta_knut += 1;
+        }
+    }
+
+    let (mut nf_slut, mut tot_slut) = (0usize, 0usize);
+    for d in sim.djur.iter().filter(|d| d.lev) {
+        tot_slut += 1;
+        if d.markt == fokus_ar_markt {
+            nf_slut += 1;
+        }
+    }
+    let (vn_f, vn_m, v_div) = mat_v_diagnostik(&sim, fokus_ar_markt);
+    let dp_tot = sim.parningar_totalt.saturating_sub(bas_par_tot);
+    let dp_kors = sim.parningar_kors.saturating_sub(bas_par_kors);
+    let u = TavlingUtfall2260 {
+        slut_andel_fokus: if tot_slut > 0 { nf_slut as f64 / tot_slut as f64 } else { f64::NAN },
+        medel_andel_fokus: if n_andel > 0 { sum_andel / n_andel as f64 } else { f64::NAN },
+        energi_fokus: if n_e_f > 0 { sum_e_f / n_e_f as f64 } else { f64::NAN },
+        energi_mot: if n_e_m > 0 { sum_e_m / n_e_m as f64 } else { f64::NAN },
+        intag_fokus: if n_i_f > 0 { sum_i_f / n_i_f as f64 } else { f64::NAN },
+        intag_mot: if n_i_m > 0 { sum_i_m / n_i_m as f64 } else { f64::NAN },
+        slutpop: tot_slut as f64,
+        korspar_andel: if dp_tot > 0 { dp_kors as f64 / dp_tot as f64 } else { 0.0 },
+        v_norm_fokus: vn_f,
+        v_norm_mot: vn_m,
+        v_divergens: v_div,
+        tidserie,
+    };
+
+    let prog_txt = if let Some((klara_a, totalt, t_tot)) = progress {
+        let k = klara_a.fetch_add(1, Ordering::Relaxed) + 1;
+        let ganget = t_tot.elapsed().as_secs_f64();
+        let kvar = if k > 0 && k < *totalt { ganget * (*totalt - k) as f64 / k as f64 } else { 0.0 };
+        format!(" [klara {k}/{totalt}, kört {:.1} min, kvar ~{:.1} min]", ganget / 60.0, kvar / 60.0)
+    } else {
+        String::new()
+    };
+    live_logg_med(
+        EGEN_LOGG_2260,
+        "Alt 2260",
+        &format!(
+            "Frö {fro} {arm_namn} klar ({:.1}s): medel={:.1}% slut={:.1}% korspar={:.1}% div={:.3} E={:.1}/{:.1} pop={:.0}{prog_txt}",
+            t0.elapsed().as_secs_f64(),
+            u.medel_andel_fokus * 100.0,
+            u.slut_andel_fokus * 100.0,
+            u.korspar_andel * 100.0,
+            u.v_divergens,
+            u.energi_fokus,
+            u.energi_mot,
+            u.slutpop,
+        ),
+    );
+    u
+}
+
+fn kora_sparb2260(fron: &[u64], inkor_ar: i64, tavling_ar: i64, tradar: usize) -> Result<String, String> {
+    if fron.is_empty() {
+        return Err("inga frön".into());
+    }
+    let t_start = std::time::Instant::now();
+    live_logg_med(
+        EGEN_LOGG_2260,
+        "Alt 2260",
+        &format!(
+            "Startar Alt 2260 (100-årstävling kors vs linjeparning, 6 armar + gendiagnostik) på {} världar (inkörning {inkor_ar} år, tävling {tavling_ar} år, {tradar} trådar)",
+            fron.len()
+        ),
+    );
+
+    let next_f = AtomicUsize::new(0);
+    let n_tr = tradar.max(1).min(fron.len());
+    let mut bas_par: Vec<(u64, Sim)> = std::thread::scope(|s| -> Result<Vec<(u64, Sim)>, String> {
+        let hs: Vec<_> = (0..n_tr)
+            .map(|_| {
+                s.spawn(|| -> Result<Vec<(u64, Sim)>, String> {
+                    let mut out = Vec::new();
+                    loop {
+                        let fi = next_f.fetch_add(1, Ordering::Relaxed);
+                        if fi >= fron.len() {
+                            break;
+                        }
+                        let fro = fron[fi];
+                        let t0 = std::time::Instant::now();
+                        let mut sim = bygg_varld_2238(fro)?;
+                        for _ in 0..inkor_ar * STEG_PER_AR {
+                            sim.steg();
+                        }
+                        live_logg_med(
+                            EGEN_LOGG_2260,
+                            "Alt 2260",
+                            &format!("Inkörning frö {fro} klar ({} djur, {:.1}s)", sim.antal(), t0.elapsed().as_secs_f64()),
+                        );
+                        out.push((fro, sim));
+                    }
+                    Ok(out)
+                })
+            })
+            .collect();
+        let mut all = Vec::with_capacity(fron.len());
+        for h in hs {
+            all.extend(h.join().map_err(|_| "inkörningstråd föll".to_string())??);
+        }
+        Ok(all)
+    })?;
+    bas_par.sort_by_key(|x| x.0);
+    let bas_arc = Arc::new(bas_par);
+
+    let d2_on = Formaga::Lar2144D2(0.20, 40);
+    let d2_off = Formaga::Stryk2144D2(0.20, 40);
+    let armar: [(&'static str, Formaga, Formaga, bool, bool); 6] = [
+        ("Kors_A", d2_on, d2_off, true, false),
+        ("Kors_Spegel", d2_off, d2_on, false, false),
+        ("Kors_Noll", d2_on, d2_on, true, false),
+        ("Iso_A", d2_on, d2_off, true, true),
+        ("Iso_Spegel", d2_off, d2_on, false, true),
+        ("Iso_Noll", d2_on, d2_on, true, true),
+    ];
+
+    let mut jobb: Vec<(usize, usize)> = Vec::with_capacity(fron.len() * 6);
+    for ai in 0..6 {
+        for fi in 0..bas_arc.len() {
+            jobb.push((fi, ai));
+        }
+    }
+    let next_j = AtomicUsize::new(0);
+    let progress = Arc::new((AtomicUsize::new(0), jobb.len(), std::time::Instant::now()));
+    let mut grid = vec![vec![TavlingUtfall2260::default(); 6]; bas_arc.len()];
+    let grid_mtx = Mutex::new(&mut grid);
+    let n_jw = tradar.max(1).min(jobb.len());
+    std::thread::scope(|s| {
+        for _ in 0..n_jw {
+            let bas_c = Arc::clone(&bas_arc);
+            let prog_c = Arc::clone(&progress);
+            let jobb_ref = &jobb;
+            let next_ref = &next_j;
+            let mtx_ref = &grid_mtx;
+            s.spawn(move || loop {
+                let ji = next_ref.fetch_add(1, Ordering::Relaxed);
+                if ji >= jobb_ref.len() {
+                    break;
+                }
+                let (fi, ai) = jobb_ref[ji];
+                let (fro, ref sim_bas) = bas_c[fi];
+                let (namn, fm_m, fm_o, fokus_m, iso) = armar[ai];
+                let u = sparb2260_en_arm(sim_bas, fro, namn, fm_m, fm_o, fokus_m, iso, tavling_ar, Some(&*prog_c));
+                mtx_ref.lock().unwrap()[fi][ai] = u;
+            });
+        }
+    });
+
+    let sec = t_start.elapsed().as_secs_f64();
+    let n = grid.len();
+    let krav = (n * 3).div_ceil(4); // 15 av 20
+    let mut t = String::new();
+    let _ = writeln!(t, "# Alt 2260: 100-årig direkt 50/50-tävling (Korsparning vs Linjeparning, dubbel nollkontroll & gendiagnostik, {n} världar, {tavling_ar} år, {sec:.1}s)\n");
+    let _ = writeln!(t, "Regler: piharness `docs/evolution/alt2260-utfallsregel.md`. Ojämn växtåterväxt (`Alt 1954` + `Alt 1955`). Inkörning {inkor_ar} år + tävling {tavling_ar} år.\n");
+
+    let _ = writeln!(t, "## 1. Tävlingsutfall och gendiagnostik per arm (sista 10 år, median [95 %-bootstrap-intervall])\n");
+    let _ = writeln!(t, "| Arm | Medelandel VM | Slutandel | Energi (VM / Mot) | Intag (VM / Mot) | Korsparning | ‖v‖ (VM / Mot) | v-divergens | >50 % |");
+    let _ = writeln!(t, "|---|---|---|---|---|---|---|---|---|");
+    for (ai, &(namn, _, _, _, _)) in armar.iter().enumerate() {
+        let (ma, mal, mah) = bootstrap_ci_seed(&grid.iter().map(|r| r[ai].medel_andel_fokus).collect::<Vec<_>>(), 2260);
+        let (sa, sal, sah) = bootstrap_ci_seed(&grid.iter().map(|r| r[ai].slut_andel_fokus).collect::<Vec<_>>(), 2260);
+        let ef = median(grid.iter().map(|r| r[ai].energi_fokus).collect());
+        let em = median(grid.iter().map(|r| r[ai].energi_mot).collect());
+        let inf = median(grid.iter().map(|r| r[ai].intag_fokus).collect());
+        let inm = median(grid.iter().map(|r| r[ai].intag_mot).collect());
+        let kp = median(grid.iter().map(|r| r[ai].korspar_andel).collect());
+        let vnf = median(grid.iter().map(|r| r[ai].v_norm_fokus).collect());
+        let vnm = median(grid.iter().map(|r| r[ai].v_norm_mot).collect());
+        let vdiv = median(grid.iter().map(|r| r[ai].v_divergens).collect());
+        let w = grid.iter().filter(|r| r[ai].medel_andel_fokus > 0.50).count();
+        let _ = writeln!(
+            t,
+            "| {namn} | {:.1} % [{:.1}; {:.1}] | {:.1} % [{:.1}; {:.1}] | {ef:.1} / {em:.1} | {inf:.4} / {inm:.4} | {:.1} % | {vnf:.3} / {vnm:.3} | {vdiv:.3} | {w}/{n} |",
+            ma * 100.0, mal * 100.0, mah * 100.0, sa * 100.0, sal * 100.0, sah * 100.0, kp * 100.0
+        );
+    }
+
+    let _ = writeln!(t, "\n## 2. Tidsserie över 100 år (spegelmedel och gen-divergens, median över {n} världar)\n");
+    let _ = writeln!(t, "| År | Kors spegelmedel | Kors noll | Iso spegelmedel | Iso noll | Kors v-div | Iso v-div |");
+    let _ = writeln!(t, "|---|---|---|---|---|---|---|");
+    let n_knut = grid[0][0].tidserie.len();
+    for ki in 0..n_knut {
+        let ar = grid[0][0].tidserie[ki].0;
+        let km = median(grid.iter().map(|r| 0.5 * (r[0].tidserie[ki].1 + r[1].tidserie[ki].1)).collect());
+        let kn = median(grid.iter().map(|r| r[2].tidserie[ki].1).collect());
+        let im = median(grid.iter().map(|r| 0.5 * (r[3].tidserie[ki].1 + r[4].tidserie[ki].1)).collect());
+        let inoll = median(grid.iter().map(|r| r[5].tidserie[ki].1).collect());
+        let kd = median(grid.iter().map(|r| 0.5 * (r[0].tidserie[ki].2 + r[1].tidserie[ki].2)).collect());
+        let id = median(grid.iter().map(|r| 0.5 * (r[3].tidserie[ki].2 + r[4].tidserie[ki].2)).collect());
+        let _ = writeln!(
+            t,
+            "| {ar} | {:.1} % | {:.1} % | {:.1} % | {:.1} % | {kd:.3} | {id:.3} |",
+            km * 100.0, kn * 100.0, im * 100.0, inoll * 100.0
+        );
+    }
+
+    // Låst utfallsbedömning
+    let noll_kors = median(grid.iter().map(|r| r[2].medel_andel_fokus).collect());
+    let noll_iso = median(grid.iter().map(|r| r[5].medel_andel_fokus).collect());
+    let k1 = (0.45..=0.55).contains(&noll_kors) && (0.45..=0.55).contains(&noll_iso);
+
+    let kors_par: Vec<f64> = grid.iter().map(|r| 0.5 * (r[0].medel_andel_fokus + r[1].medel_andel_fokus)).collect();
+    let iso_par: Vec<f64> = grid.iter().map(|r| 0.5 * (r[3].medel_andel_fokus + r[4].medel_andel_fokus)).collect();
+    let delta_iso_kors: Vec<f64> = iso_par.iter().zip(kors_par.iter()).map(|(a, b)| a - b).collect();
+
+    let (km, kml, kmh) = bootstrap_ci_seed(&kors_par, 2260);
+    let (im, iml, imh) = bootstrap_ci_seed(&iso_par, 2260);
+    let (dm, dml, dmh) = bootstrap_ci_seed(&delta_iso_kors, 2260);
+
+    let wk_a = grid.iter().filter(|r| r[0].medel_andel_fokus > 0.50).count();
+    let wk_s = grid.iter().filter(|r| r[1].medel_andel_fokus > 0.50).count();
+    let wk_p = kors_par.iter().filter(|&&x| x > 0.50).count();
+    let wk_e = grid.iter().filter(|r| (r[0].energi_fokus > r[0].energi_mot) && (r[1].energi_fokus > r[1].energi_mot)).count();
+    let wk_i = grid.iter().filter(|r| (r[0].intag_fokus > r[0].intag_mot) && (r[1].intag_fokus > r[1].intag_mot)).count();
+    let kors_gron = k1 && wk_a >= krav && wk_s >= krav && wk_p >= krav && km >= 0.60 && kml > 0.55 && wk_e >= krav && wk_i >= krav;
+
+    let wi_a = grid.iter().filter(|r| r[3].medel_andel_fokus > 0.50).count();
+    let wi_s = grid.iter().filter(|r| r[4].medel_andel_fokus > 0.50).count();
+    let wi_p = iso_par.iter().filter(|&&x| x > 0.50).count();
+    let wi_e = grid.iter().filter(|r| (r[3].energi_fokus > r[3].energi_mot) && (r[4].energi_fokus > r[4].energi_mot)).count();
+    let wi_i = grid.iter().filter(|r| (r[3].intag_fokus > r[3].intag_mot) && (r[4].intag_fokus > r[4].intag_mot)).count();
+    let iso_gron = k1 && wi_a >= krav && wi_s >= krav && wi_p >= krav && im >= 0.60 && iml > 0.55 && wi_e >= krav && wi_i >= krav;
+
+    let dom = if kors_gron && iso_gron {
+        "GRÖNT PÅ BÅDA (Kors + Iso) — direkt evolutionär seger även under öppet genflöde, redo för bekräftelse på frö 321–340"
+    } else if kors_gron {
+        "GRÖNT PÅ KORS — direkt evolutionär seger under öppet genflöde, redo för bekräftelse på frö 321–340"
+    } else if iso_gron {
+        "GRÖNT ENDAST PÅ ISO — världsmodellen vinner stort under linjeisolering men bromsas av genflöde vid öppen parning"
+    } else {
+        "RÖTT / EJ VISAT — varken Kors eller Iso nådde låsta 60 %-gränsen"
+    };
+
+    let _ = writeln!(t, "\n## 3. Låst utfallsbedömning (krav {krav}/{n}, bibehållen 60 %-gräns)\n");
+    let _ = writeln!(t, "- **Krav 1 (Dubbel neutral nollkontroll inom 45–55 %):** Kors_Noll `{:.1} %`, Iso_Noll `{:.1} %` -> **{}**", noll_kors * 100.0, noll_iso * 100.0, if k1 { "PASS" } else { "FAIL" });
+    let _ = writeln!(t, "- **Korsparning (K2+K3):** A **{wk_a}/{n}**, Spegel **{wk_s}/{n}**, Spegelmedel **{wk_p}/{n}** (`{:.1} % [{:.1}; {:.1}]`), Energi **{wk_e}/{n}**, Intag **{wk_i}/{n}** -> **{}**", km * 100.0, kml * 100.0, kmh * 100.0, if kors_gron { "PASS" } else { "FAIL" });
+    let _ = writeln!(t, "- **Linjeparning / Iso (K2+K3):** A **{wi_a}/{n}**, Spegel **{wi_s}/{n}**, Spegelmedel **{wi_p}/{n}** (`{:.1} % [{:.1}; {:.1}]`), Energi **{wi_e}/{n}**, Intag **{wi_i}/{n}** -> **{}**", im * 100.0, iml * 100.0, imh * 100.0, if iso_gron { "PASS" } else { "FAIL" });
+    let _ = writeln!(t, "- **Mekanismskillnad Δ (Iso − Kors):** `{:+.1} procentenheter [{:+.1}; {:+.1}]`", dm * 100.0, dml * 100.0, dmh * 100.0);
+    let _ = writeln!(t, "- **Samlad dom:** **{dom}**");
+
+    live_logg_med(EGEN_LOGG_2260, "Alt 2260", &format!("KLAR sparb2260 ({sec:.1}s): {dom}"));
     Ok(t)
 }
 
