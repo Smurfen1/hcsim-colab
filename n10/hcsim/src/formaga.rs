@@ -66,6 +66,16 @@ pub enum Formaga {
     Lar2267Krit(f64, u16),
     /// Alt 2267 strykprov: exakt samma lärda kritiker som `Lar2267Krit`, men världsmodellen avstängd i handlingsvalet.
     Stryk2267Krit(f64, u16),
+    /// Alt 2282 (Skede B, B1): 29-kanalig JEPA + lärd kritiker + ärvd skadeviktsgen `w_skada`.
+    LarB1Krit(f64, u16),
+    /// Alt 2282 strykprov: exakt samma som `LarB1Krit`, men världsmodellen avstängd i handlingsvalet.
+    StrykB1Krit(f64, u16),
+    /// Alt 2282 / Alt 2277: samma världsmodell som `LarB1Krit`, men livstidskritikern fryst (`w_krit = 0`, bara ärvd `v_0`).
+    FrystKritB1(f64, u16),
+    /// Alt 2282 / Alt 2277 / Alt 1882: samma som `LarB1Krit`, men med `w_skada ≡ 0` (ingen smärtsignal).
+    LarB1UtanSkada(f64, u16),
+    /// Alt 2282 (Regel 14): 9-handlings minnestabell som får exakt samma `r_b1 = ΔE − w_skada · skada`-signal.
+    TabellB1,
     /// Enkel stillastående-baslinje utan hjärna (Regel 14): väljer `a = 0` med sannolikhet `p`, annars jämnt bland `1..8`.
     StannaSlump(f64),
 }
@@ -101,6 +111,11 @@ impl Formaga {
             Formaga::Lar2144D2SlumpGen(p, a) => format!("lar2144_d2_slumpgen({p}, {a})"),
             Formaga::Lar2267Krit(p, a) => format!("lar2267_krit({p}, {a})"),
             Formaga::Stryk2267Krit(p, a) => format!("stryk2267_krit({p}, {a})"),
+            Formaga::LarB1Krit(p, a) => format!("lar_b1_krit({p}, {a})"),
+            Formaga::StrykB1Krit(p, a) => format!("stryk_b1_krit({p}, {a})"),
+            Formaga::FrystKritB1(p, a) => format!("fryst_krit_b1({p}, {a})"),
+            Formaga::LarB1UtanSkada(p, a) => format!("lar_b1_utan_skada({p}, {a})"),
+            Formaga::TabellB1 => "tabell_b1".into(),
             Formaga::StannaSlump(p) => format!("stanna_slump({p})"),
         }
     }
@@ -130,6 +145,10 @@ impl Formaga {
                 | Formaga::Lar2144D2SlumpGen(_, _)
                 | Formaga::Lar2267Krit(_, _)
                 | Formaga::Stryk2267Krit(_, _)
+                | Formaga::LarB1Krit(_, _)
+                | Formaga::StrykB1Krit(_, _)
+                | Formaga::FrystKritB1(_, _)
+                | Formaga::LarB1UtanSkada(_, _)
         )
     }
 
@@ -154,11 +173,53 @@ impl Formaga {
                 | Formaga::Lar2144D2SlumpGen(_, _)
                 | Formaga::Lar2267Krit(_, _)
                 | Formaga::Stryk2267Krit(_, _)
+                | Formaga::LarB1Krit(_, _)
+                | Formaga::StrykB1Krit(_, _)
+                | Formaga::FrystKritB1(_, _)
+                | Formaga::LarB1UtanSkada(_, _)
         )
     }
 
     pub fn ar_tabell(self) -> bool {
         matches!(self, Formaga::Tabell | Formaga::TabellUtanSlump)
+    }
+
+    pub fn ar_tabell_b1(self) -> bool {
+        matches!(self, Formaga::TabellB1)
+    }
+
+    pub fn cfg_b1(self, r_klamp: f64) -> Option<crate::hjarnab1::HjB1Config> {
+        match self {
+            Formaga::LarB1Krit(_, alpha_tio) => Some(crate::hjarnab1::HjB1Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_kritiker: true,
+                anvand_w_skada: true,
+                r_klamp,
+            }),
+            Formaga::StrykB1Krit(_, alpha_tio) => Some(crate::hjarnab1::HjB1Config {
+                stryk_handling_i_val: true,
+                rls_alpha_tio: alpha_tio,
+                med_kritiker: true,
+                anvand_w_skada: true,
+                r_klamp,
+            }),
+            Formaga::FrystKritB1(_, alpha_tio) => Some(crate::hjarnab1::HjB1Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_kritiker: false,
+                anvand_w_skada: true,
+                r_klamp,
+            }),
+            Formaga::LarB1UtanSkada(_, alpha_tio) => Some(crate::hjarnab1::HjB1Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_kritiker: true,
+                anvand_w_skada: false,
+                r_klamp,
+            }),
+            _ => None,
+        }
     }
 
     pub fn har_intagslasare(self) -> bool {

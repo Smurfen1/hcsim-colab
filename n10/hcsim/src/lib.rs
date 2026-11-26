@@ -7,6 +7,7 @@ pub mod diagnos;
 pub mod formaga;
 pub mod hjarna;
 pub mod hjarna2008;
+pub mod hjarnab1;
 pub mod hjarnprov;
 pub mod hjarnstorlek;
 pub mod hjsignal;

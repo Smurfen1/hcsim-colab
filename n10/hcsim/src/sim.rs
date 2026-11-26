@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::formaga::{Formaga, HjarnArm, Intagslasare, Minnestabell, EPS_ARV_XOR, EPS_START};
 use crate::hjarna::{self, gauss, lott_bland_max, Hj};
 use crate::hjarna2008::Hj2008;
+use crate::hjarnab1::{GenB1, HjB1, S_B1};
 use crate::klimat::Klimat;
 use crate::rng::Rng;
 use crate::tal::{self, vmax_ruta, A_N, SIGMA_MUT};
@@ -122,6 +123,19 @@ pub struct Dino {
     pub e_fore_steg: f64,
     #[serde(skip)]
     pub senaste_de: Option<f64>,
+    /// Alt 2282 (Skede B, B1): 29-kanalig hjärna, ärvt B1-genom (inkl. w_skada) och fysisk skada.
+    #[serde(skip)]
+    pub hj_b1: Option<Box<HjB1>>,
+    #[serde(skip)]
+    pub gen_b1: Option<GenB1>,
+    #[serde(skip)]
+    pub skada: f64,
+    #[serde(skip)]
+    pub senaste_skada: f64,
+    #[serde(skip)]
+    pub senaste_r_b1: Option<f64>,
+    #[serde(skip)]
+    pub forra_kron_grann_medel: f64,
 }
 
 fn default_eps() -> f64 {
@@ -893,6 +907,90 @@ impl Matning {
     }
 }
 
+/// Parametrar för flygande rovdjurstryck och skadefysik i Skede B, steg B1 (Alt 2282).
+#[derive(Clone, Copy, Debug)]
+pub struct RovdjurB1Param {
+    /// Grundsannolikhet per steg att angripas vid helt öppen mark (kron = 0) som vuxen.
+    pub p_bas: f64,
+    /// Skada per icke-dödligt angrepp ∈ (0, 1].
+    pub skada_per_traff: f64,
+    /// Sannolikhet att ett angrepp är direkt dödligt (annars icke-dödlig skada; skada ≥ 1,0 dödar).
+    pub p_direkt_dod: f64,
+    /// Naturlig läkning per steg utan angrepp.
+    pub lakning_per_steg: f64,
+    /// Fysiologisk energikostnad per läkt skadeenhet.
+    pub lak_energi: f64,
+    /// Extra exponering för unga djur (age < LITEN).
+    pub unge_faktor: f64,
+    /// Om Some(e): ersätt `(1 − kron)` med konstant exponering `e` (neutral-kron-kontroll).
+    pub neutral_exponering: Option<f64>,
+    /// Om true: nollställ krontäckessinnena (19..28) för märkta djur.
+    pub stryk_kron_markt: bool,
+    /// Om true: nollställ krontäckessinnena (19..28) för omärkta djur.
+    pub stryk_kron_omarkt: bool,
+    /// Klämningsgräns för kroppssignalen `r_t` i kritikern (`10.0` eller `20.0`).
+    pub r_klamp: f64,
+}
+
+impl Default for RovdjurB1Param {
+    fn default() -> Self {
+        Self {
+            p_bas: 0.008,
+            skada_per_traff: 0.30,
+            p_direkt_dod: 0.15,
+            lakning_per_steg: 0.015,
+            lak_energi: 2.0,
+            unge_faktor: 1.5,
+            neutral_exponering: None,
+            stryk_kron_markt: false,
+            stryk_kron_omarkt: false,
+            r_klamp: 10.0,
+        }
+    }
+}
+
+/// Tillstånd och läsbar mätning för flygande rovdjurstryck i B1 (rör aldrig `Sim::g`).
+#[derive(Clone, Debug)]
+pub struct RovdjurB1 {
+    pub param: RovdjurB1Param,
+    /// Fysiskt krontäcke per ruta ∈ [0, 1] härlett ur kartans habitat + deterministisk gläntmosaik.
+    pub kron: Vec<f64>,
+    pub rng: Rng,
+    pub angrepp_markt: u64,
+    pub angrepp_omarkt: u64,
+    pub dod_rovdjur_markt: u64,
+    pub dod_rovdjur_omarkt: u64,
+    pub dod_rovdjur_vuxen_markt: u64,
+    pub dod_rovdjur_vuxen_omarkt: u64,
+    pub djursteg_markt: u64,
+    pub djursteg_omarkt: u64,
+    pub djursteg_vuxen_markt: u64,
+    pub djursteg_vuxen_omarkt: u64,
+    pub kron_sum_markt: f64,
+    pub kron_sum_omarkt: f64,
+    pub kron_diff_sum_markt: f64,
+    pub kron_diff_sum_omarkt: f64,
+}
+
+impl RovdjurB1 {
+    pub fn nollstall_matare(&mut self) {
+        self.angrepp_markt = 0;
+        self.angrepp_omarkt = 0;
+        self.dod_rovdjur_markt = 0;
+        self.dod_rovdjur_omarkt = 0;
+        self.dod_rovdjur_vuxen_markt = 0;
+        self.dod_rovdjur_vuxen_omarkt = 0;
+        self.djursteg_markt = 0;
+        self.djursteg_omarkt = 0;
+        self.djursteg_vuxen_markt = 0;
+        self.djursteg_vuxen_omarkt = 0;
+        self.kron_sum_markt = 0.0;
+        self.kron_sum_omarkt = 0.0;
+        self.kron_diff_sum_markt = 0.0;
+        self.kron_diff_sum_omarkt = 0.0;
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Sim {
     pub b: usize,
@@ -1018,6 +1116,9 @@ pub struct Sim {
     pub fodslar_markt: u64,
     #[serde(skip)]
     pub fodslar_omarkt: u64,
+    /// Alt 2282 (Skede B, B1; None som standard): flygande rovdjurstryck, krontäcke och skadefysik.
+    #[serde(skip)]
+    pub rovdjur_b1: Option<RovdjurB1>,
 }
 
 impl Sim {
@@ -1099,6 +1200,12 @@ impl Sim {
                     hj2059: None,
                     e_fore_steg: 0.0,
                     senaste_de: None,
+                    hj_b1: None,
+                    gen_b1: None,
+                    skada: 0.0,
+                    senaste_skada: 0.0,
+                    senaste_r_b1: None,
+                    forra_kron_grann_medel: 0.0,
                 });
                 nasta_uid += 1;
             }
@@ -1158,7 +1265,98 @@ impl Sim {
             parningar_kors: 0,
             fodslar_markt: 0,
             fodslar_omarkt: 0,
+            rovdjur_b1: None,
         }
+    }
+
+    /// Härleder fysiskt B1-krontäcke ∈ [0, 1] ur kartans verkliga habitat (`vatten` + `vaxt_grupper`)
+    /// plus en deterministisk, rumsligt sammanhängande gläntmosaik på land så att både flodslättens öppna
+    /// örtbälte (rik mat, lågt krontäcke) och skogens gläntor/täta bestånd skapar äkta avvägning mat mot skydd.
+    pub fn bygg_kron_b1(&self, fro: u64) -> Vec<f64> {
+        let n = self.v.len();
+        let mut kron = vec![0.0; n];
+        let mut g = Rng::new(fro ^ 0x2282_C40A_1001);
+        let phi1 = g.f() * std::f64::consts::TAU;
+        let phi2 = g.f() * std::f64::consts::TAU;
+        let phi3 = g.f() * std::f64::consts::TAU;
+        let phi4 = g.f() * std::f64::consts::TAU;
+        let has_vg = self.vaxt_grupper.len() == n;
+        for j in 0..self.h {
+            let fy = j as f64 / self.h.max(1) as f64 * std::f64::consts::TAU;
+            for i in 0..self.b {
+                let fx = i as f64 / self.b.max(1) as f64 * std::f64::consts::TAU;
+                let c = j * self.b + i;
+                let vt = self.vatten[c];
+                if !matches!(vt, Vatten::Land | Vatten::Trask) {
+                    kron[c] = 0.0;
+                    continue;
+                }
+                let mosaik = 0.24 * (5.0 * fx + phi1).sin() * (5.0 * fy + phi2).cos()
+                    + 0.18 * (7.0 * fx - 3.0 * fy + phi3).cos() * (3.0 * fx + 7.0 * fy + phi4).sin();
+                let bas = match vt {
+                    Vatten::Trask => 0.35,
+                    Vatten::Land => {
+                        let ort = if has_vg {
+                            self.vaxt_grupper[c][hckarta::VAXT_ORT] as f64
+                        } else {
+                            0.10
+                        };
+                        if ort >= 0.25 {
+                            // Öppet, solbelyst flodslättsbälte med rik örtflora och glest krontäcke
+                            0.18
+                        } else {
+                            // Mosaik av skogsgläntor och täta lövskogsbestånd
+                            0.52
+                        }
+                    }
+                    _ => 0.0,
+                };
+                let amp = if matches!(vt, Vatten::Land)
+                    && has_vg
+                    && self.vaxt_grupper[c][hckarta::VAXT_ORT] >= 0.25
+                {
+                    0.25
+                } else {
+                    1.0
+                };
+                kron[c] = (bas + amp * mosaik).clamp(0.05, 0.95);
+            }
+        }
+        kron
+    }
+
+    /// Aktiverar B1:s fysiska flygande rovdjurstryck och tilldelar varje levande djur sitt ärftliga B1-genom (w_skada = 0).
+    pub fn aktivera_rovdjur_b1(&mut self, fro: u64, param: RovdjurB1Param) {
+        let kron = self.bygg_kron_b1(fro);
+        for d in &mut self.djur {
+            if d.gen_b1.is_none() {
+                let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
+                d.gen_b1 = Some(GenB1::slump(&mut gg));
+            }
+            d.skada = 0.0;
+            d.senaste_skada = 0.0;
+            d.senaste_r_b1 = None;
+            d.hj_b1 = None;
+        }
+        self.rovdjur_b1 = Some(RovdjurB1 {
+            param,
+            kron,
+            rng: Rng::new(fro ^ 0x2282_507D_0007),
+            angrepp_markt: 0,
+            angrepp_omarkt: 0,
+            dod_rovdjur_markt: 0,
+            dod_rovdjur_omarkt: 0,
+            dod_rovdjur_vuxen_markt: 0,
+            dod_rovdjur_vuxen_omarkt: 0,
+            djursteg_markt: 0,
+            djursteg_omarkt: 0,
+            djursteg_vuxen_markt: 0,
+            djursteg_vuxen_omarkt: 0,
+            kron_sum_markt: 0.0,
+            kron_sum_omarkt: 0.0,
+            kron_diff_sum_markt: 0.0,
+            kron_diff_sum_omarkt: 0.0,
+        });
     }
 
     /// Kopplar in SIMULERINGENs kartlager för 6 växtgrupper och låsta `atervaxt.tsv` (`Alt 1954` + `Alt 1955` / `Alt 2238`).
@@ -1365,7 +1563,7 @@ impl Sim {
             self.markering_skedd = true;
             for d in self.djur.iter_mut().filter(|d| d.lev) {
                 d.formaga = if d.markt { arm.markta } else { arm.omarkta };
-                if d.formaga.ar_tabell() {
+                if d.formaga.ar_tabell() || d.formaga.ar_tabell_b1() {
                     d.tabell = Minnestabell::ny();
                 }
                 if d.formaga.har_intagslasare() {
@@ -1374,6 +1572,16 @@ impl Sim {
                 if d.formaga.cfg_2059().is_some() {
                     d.hj2059 = None;
                     d.senaste_de = None;
+                }
+                if d.formaga.cfg_b1(10.0).is_some() || d.formaga.ar_tabell_b1() {
+                    d.hj_b1 = None;
+                    d.senaste_r_b1 = None;
+                    d.skada = 0.0;
+                    d.senaste_skada = 0.0;
+                    if d.gen_b1.is_none() {
+                        let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
+                        d.gen_b1 = Some(GenB1::slump(&mut gg));
+                    }
                 }
             }
         }
@@ -1654,6 +1862,9 @@ impl Sim {
             self.ror_sig();
             self.betar();
         }
+        if self.rovdjur_b1.is_some() {
+            self.rovdjur_b1_steg();
+        }
         self.alder_fodsel_dod();
         self.t += 1;
         if self.utforsk_matning.pa && self.markering_skedd && self.t % tal::STEG_PER_AR == 0 {
@@ -1799,6 +2010,21 @@ impl Sim {
             let hj_varden = self.hj_varden_alla(idx, &s);
             let hj_varde = hj_varden[a];
             self.djur[idx].e_fore_steg = self.djur[idx].e;
+            if let Some(ref rov) = self.rovdjur_b1 {
+                let mut k_sum = 0.0;
+                let mut k_n = 0usize;
+                for &(di, dj) in &GRANNAR {
+                    let (ni, nj) = self.kant_granne(i0 as i32 + di, j0 as i32 + dj);
+                    if ni >= 0 && nj >= 0 && (ni as usize) < self.b && (nj as usize) < self.h {
+                        let nc = self.cell(ni as usize, nj as usize);
+                        if matches!(self.vatten[nc], Vatten::Land | Vatten::Trask) {
+                            k_sum += rov.kron[nc];
+                            k_n += 1;
+                        }
+                    }
+                }
+                self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
+            }
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -1909,6 +2135,21 @@ impl Sim {
             let formaga = self.djur[idx].formaga;
             let a = self.valj_handling(idx, &s, &antal);
             self.djur[idx].e_fore_steg = self.djur[idx].e;
+            if let Some(ref rov) = self.rovdjur_b1 {
+                let mut k_sum = 0.0;
+                let mut k_n = 0usize;
+                for &(di, dj) in &GRANNAR {
+                    let (ni, nj) = self.kant_granne(i0 as i32 + di, j0 as i32 + dj);
+                    if ni >= 0 && nj >= 0 && (ni as usize) < self.b && (nj as usize) < self.h {
+                        let nc = self.cell(ni as usize, nj as usize);
+                        if matches!(self.vatten[nc], Vatten::Land | Vatten::Trask) {
+                            k_sum += rov.kron[nc];
+                            k_n += 1;
+                        }
+                    }
+                }
+                self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
+            }
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -1981,6 +2222,21 @@ impl Sim {
             let formaga = self.djur[idx].formaga;
             let a = self.valj_handling(idx, &s, &antal_start);
             self.djur[idx].e_fore_steg = self.djur[idx].e;
+            if let Some(ref rov) = self.rovdjur_b1 {
+                let mut k_sum = 0.0;
+                let mut k_n = 0usize;
+                for &(di, dj) in &GRANNAR {
+                    let (ni, nj) = self.kant_granne(i0 as i32 + di, j0 as i32 + dj);
+                    if ni >= 0 && nj >= 0 && (ni as usize) < self.b && (nj as usize) < self.h {
+                        let nc = self.cell(ni as usize, nj as usize);
+                        if matches!(self.vatten[nc], Vatten::Land | Vatten::Trask) {
+                            k_sum += rov.kron[nc];
+                            k_n += 1;
+                        }
+                    }
+                }
+                self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
+            }
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -2068,6 +2324,21 @@ impl Sim {
             let hj_varden = self.hj_varden_alla(idx, &s);
             let hj_varde = hj_varden[a];
             self.djur[idx].e_fore_steg = self.djur[idx].e;
+            if let Some(ref rov) = self.rovdjur_b1 {
+                let mut k_sum = 0.0;
+                let mut k_n = 0usize;
+                for &(di, dj) in &GRANNAR {
+                    let (ni, nj) = self.kant_granne(i0 as i32 + di, j0 as i32 + dj);
+                    if ni >= 0 && nj >= 0 && (ni as usize) < self.b && (nj as usize) < self.h {
+                        let nc = self.cell(ni as usize, nj as usize);
+                        if matches!(self.vatten[nc], Vatten::Land | Vatten::Trask) {
+                            k_sum += rov.kron[nc];
+                            k_n += 1;
+                        }
+                    }
+                }
+                self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
+            }
             self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
@@ -2291,7 +2562,7 @@ impl Sim {
                 self.notera_utforsk_val(idx, a, false);
                 a
             }
-            Formaga::Tabell => {
+            Formaga::Tabell | Formaga::TabellB1 => {
                 let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
                 let a = self.djur[idx].tabell.valj(&mut rng);
                 self.djur[idx].egen_rng = rng;
@@ -2422,6 +2693,44 @@ impl Sim {
                 };
                 self.djur[idx].egen_rng = rng;
                 self.notera_utforsk_val(idx, a, var_girig);
+                a
+            }
+            Formaga::LarB1Krit(eps, _)
+            | Formaga::StrykB1Krit(eps, _)
+            | Formaga::FrystKritB1(eps, _)
+            | Formaga::LarB1UtanSkada(eps, _) => {
+                let r_klamp = self
+                    .rovdjur_b1
+                    .as_ref()
+                    .map(|r| r.param.r_klamp)
+                    .unwrap_or(10.0);
+                let cfg = formaga.cfg_b1(r_klamp).unwrap();
+                let s_b1 = self.sinnen_b1(idx, s);
+                let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
+                let slump = eps > 0.0 && rng.f() < eps;
+                let a = {
+                    let d = &mut self.djur[idx];
+                    if d.gen_b1.is_none() {
+                        let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
+                        d.gen_b1 = Some(GenB1::slump(&mut gg));
+                    }
+                    if d.hj_b1.is_none() {
+                        let gb1 = d.gen_b1.as_ref().unwrap();
+                        d.hj_b1 = Some(Box::new(HjB1::fran_gen(&d.hj.gen, gb1, cfg)));
+                    }
+                    let hjb = d.hj_b1.as_mut().unwrap();
+                    hjb.cfg = cfg;
+                    hjb.vanta_beloning = d.senaste_r_b1.take();
+                    if slump {
+                        let a_m = hjb.minst_besokta_handling(&mut rng);
+                        hjb.lar_och_satt(&s_b1, true, a_m);
+                        a_m
+                    } else {
+                        hjb.valj_lott(&s_b1, true, &mut rng)
+                    }
+                };
+                self.djur[idx].egen_rng = rng;
+                self.notera_utforsk_val(idx, a, !slump);
                 a
             }
             Formaga::StannaSlump(p) => {
@@ -2559,6 +2868,126 @@ impl Sim {
         s
     }
 
+    /// 28-kanalig sinnesvektor för B1: 19 ursprungliga + 9 krontäcken (utan post-angrepp skadekollider).
+    fn sinnen_b1(&self, idx: usize, s19: &[f64]) -> [f64; S_B1] {
+        let mut s = [0.0; S_B1];
+        s[..tal::S_N].copy_from_slice(&s19[..tal::S_N]);
+        let d = &self.djur[idx];
+        if let Some(ref rov) = self.rovdjur_b1 {
+            let stryk = if d.markt {
+                rov.param.stryk_kron_markt
+            } else {
+                rov.param.stryk_kron_omarkt
+            };
+            if !stryk {
+                for (k, &(di, dj)) in GRANNAR.iter().enumerate() {
+                    let (ni, nj) = self.kant_granne(d.i as i32 + di, d.j as i32 + dj);
+                    if ni >= 0 && nj >= 0 && (ni as usize) < self.b && (nj as usize) < self.h {
+                        s[tal::S_N + k] = rov.kron[self.cell(ni as usize, nj as usize)];
+                    }
+                }
+            }
+        }
+        s
+    }
+
+    /// Fysiskt flygande rovdjurstryck, sårskada, naturlig läkning och kroppssignal `r_b1` före födsel (Alt 2282).
+    fn rovdjur_b1_steg(&mut self) {
+        let Some(mut rov) = self.rovdjur_b1.take() else {
+            return;
+        };
+        let p = rov.param;
+        let b = self.b;
+        for d in self.djur.iter_mut() {
+            if !d.lev {
+                continue;
+            }
+            let c = d.j * b + d.i;
+            let k_val = rov.kron[c];
+            let ar_vuxen = d.age >= tal::LITEN;
+            if d.markt {
+                rov.djursteg_markt += 1;
+                if ar_vuxen {
+                    rov.djursteg_vuxen_markt += 1;
+                }
+                rov.kron_sum_markt += k_val;
+                rov.kron_diff_sum_markt += k_val - d.forra_kron_grann_medel;
+            } else {
+                rov.djursteg_omarkt += 1;
+                if ar_vuxen {
+                    rov.djursteg_vuxen_omarkt += 1;
+                }
+                rov.kron_sum_omarkt += k_val;
+                rov.kron_diff_sum_omarkt += k_val - d.forra_kron_grann_medel;
+            }
+            let exp = p
+                .neutral_exponering
+                .unwrap_or_else(|| {
+                    let oppen = (1.0 - k_val).clamp(0.0, 1.0);
+                    oppen * oppen
+                });
+            let f_age = if d.age < tal::LITEN {
+                p.unge_faktor
+            } else {
+                1.0
+            };
+            let p_check = (p.p_bas * exp * f_age).clamp(0.0, 0.95);
+            // 1 steg = 2,43 dygn (~20 dagsljuskontroller per steg): binomial stokastisk störning/skada.
+            const K_DAG: usize = 20;
+            let mut moten = 0usize;
+            if p_check > 0.0 {
+                for _ in 0..K_DAG {
+                    if rov.rng.f() < p_check {
+                        moten += 1;
+                    }
+                }
+            }
+            let skada_sig = moten as f64 / K_DAG as f64;
+            let p_dod = (p.p_direkt_dod * exp * f_age).clamp(0.0, 0.95);
+            let dodlig = p_dod > 0.0 && rov.rng.f() < p_dod;
+            if moten > 0 || dodlig {
+                if d.markt {
+                    rov.angrepp_markt += (moten.max(1)) as u64;
+                } else {
+                    rov.angrepp_omarkt += (moten.max(1)) as u64;
+                }
+            }
+            if dodlig {
+                d.skada = 1.0;
+                d.senaste_skada = 1.0;
+            } else if moten > 0 {
+                d.skada = (d.skada + skada_sig * p.skada_per_traff).min(0.99);
+                d.senaste_skada = skada_sig;
+            } else {
+                d.senaste_skada = 0.0;
+            }
+            if !dodlig && d.skada > 0.0 {
+                let lakt = d.skada.min(p.lakning_per_steg);
+                d.skada -= lakt;
+                d.e -= lakt * p.lak_energi;
+            }
+            let de = d.e - d.e_fore_steg;
+            d.senaste_de = Some(de);
+            let anvand_w = match d.formaga {
+                Formaga::LarB1UtanSkada(_, _) => false,
+                _ => true,
+            };
+            let w_skada = if anvand_w {
+                d.gen_b1.as_ref().map(|g| g.w_skada.max(0.0)).unwrap_or(0.0)
+            } else {
+                0.0
+            };
+            let r_b1 = de - w_skada * d.senaste_skada;
+            d.senaste_r_b1 = Some(r_b1);
+            if d.formaga.ar_tabell_b1() {
+                if let Some(h) = d.tabell.forra_handling {
+                    d.tabell.uppdatera(h, r_b1);
+                }
+            }
+        }
+        self.rovdjur_b1 = Some(rov);
+    }
+
     /// Bete som `betas` + `bete5`: alla i rutan vill äta AT_DINO · V / VMAX; räcker det inte får alla samma andel.
     /// Sedan `e += E_VAXT * at − KOST_STEG`.
     fn betar(&mut self) {
@@ -2688,7 +3117,35 @@ impl Sim {
             if !self.djur[i].lev {
                 continue;
             }
-            if self.djur[i].e <= 0.0 {
+            if self.djur[i].skada >= 1.0 {
+                let f = self.djur[i].formaga;
+                let markt = self.djur[i].markt;
+                if self.matning.pa && self.markering_skedd {
+                    let e = self.djur[i].e;
+                    self.matning.lagg_dod(f, e, false);
+                }
+                if self.bokforing.pa && self.markering_skedd {
+                    self.bokforing.lagg_dod(f, false);
+                }
+                self.bokfor_aldrig_djur(i);
+                self.djur[i].lev = false;
+                self.djur[i].hj2059 = None;
+                self.djur[i].hj_b1 = None;
+                if let Some(ref mut rov) = self.rovdjur_b1 {
+                    let ar_vuxen = self.djur[i].age >= tal::LITEN;
+                    if markt {
+                        rov.dod_rovdjur_markt += 1;
+                        if ar_vuxen {
+                            rov.dod_rovdjur_vuxen_markt += 1;
+                        }
+                    } else {
+                        rov.dod_rovdjur_omarkt += 1;
+                        if ar_vuxen {
+                            rov.dod_rovdjur_vuxen_omarkt += 1;
+                        }
+                    }
+                }
+            } else if self.djur[i].e <= 0.0 {
                 let f = self.djur[i].formaga;
                 if self.matning.pa && self.markering_skedd {
                     let e = self.djur[i].e;
@@ -2700,6 +3157,7 @@ impl Sim {
                 self.bokfor_aldrig_djur(i);
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
+                self.djur[i].hj_b1 = None;
                 self.rak.dod_svalt += 1;
                 self.rak.dod_svalt_ar += 1;
             } else if self.djur[i].age >= self.liv_steg.unwrap_or(tal::LIV) {
@@ -2714,18 +3172,18 @@ impl Sim {
                 self.bokfor_aldrig_djur(i);
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
+                self.djur[i].hj_b1 = None;
                 self.rak.dod_alder += 1;
                 self.rak.dod_alder_ar += 1;
             }
         }
-        // födslar
+        // födslar (Alt 2279-rättning: samla nyfödda först så ingen död föräldraplats skrivs över mitt i parloopen)
         self.g.blanda(&mut par);
+        let mut nyfodda: Vec<Dino> = Vec::new();
         for (mor, far) in par {
             if !self.djur[mor].lev {
                 continue; // modern dog
             }
-            // faderns gener: om fadern dog, hoppa över? fortplantning8 använder fortfarande far-index före död.
-            // Vi parar före död-check på far; far kan ha dött. Kräv levande far.
             if !self.djur[far].lev {
                 // modern har redan betalat — som utan plats; ingen unge
                 continue;
@@ -2739,13 +3197,15 @@ impl Sim {
             let markt = self.djur[mor].markt;
             let formaga = self.formaga_for(markt);
             let (i, j) = (self.djur[mor].i, self.djur[mor].j);
-            // återanvänd död plats eller push
-            let plats = self.djur.iter().position(|d| !d.lev);
             let uid = self.nasta_uid;
             if matches!(formaga, Formaga::Lar2144D2SlumpGen(_, _)) {
                 let mut g_unge = Rng::new(uid ^ 0x2223_51A4_0001);
                 hj = Hj::slump(&mut g_unge);
             }
+            let gen_b1 = match (&self.djur[mor].gen_b1, &self.djur[far].gen_b1) {
+                (Some(mg), Some(fg)) => Some(GenB1::arv(mg, fg, uid)),
+                _ => None,
+            };
             let eps = arv_eps(self.djur[mor].eps, self.djur[far].eps, uid);
             let unge = Dino {
                 lev: true,
@@ -2768,13 +3228,16 @@ impl Sim {
                 hj2059: None,
                 e_fore_steg: 0.0,
                 senaste_de: None,
+                hj_b1: None,
+                gen_b1,
+                skada: 0.0,
+                senaste_skada: 0.0,
+                senaste_r_b1: None,
+                forra_kron_grann_medel: 0.0,
             };
             self.nasta_uid += 1;
             let formaga_unge = unge.formaga;
-            match plats {
-                Some(p) => self.djur[p] = unge,
-                None => self.djur.push(unge),
-            }
+            nyfodda.push(unge);
             self.rak.fodda += 1;
             self.rak.fodda_ar += 1;
             if markt {
@@ -2784,6 +3247,22 @@ impl Sim {
             }
             if self.bokforing.pa && self.markering_skedd {
                 self.bokforing.lagg_fodsel(formaga_unge);
+            }
+        }
+        let mut sok_start = 0usize;
+        for unge in nyfodda {
+            let mut plats = None;
+            while sok_start < self.djur.len() {
+                if !self.djur[sok_start].lev {
+                    plats = Some(sok_start);
+                    sok_start += 1;
+                    break;
+                }
+                sok_start += 1;
+            }
+            match plats {
+                Some(p) => self.djur[p] = unge,
+                None => self.djur.push(unge),
             }
         }
         // energitak
