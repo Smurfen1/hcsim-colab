@@ -76,6 +76,8 @@ pub enum Formaga {
     LarB1UtanSkada(f64, u16),
     /// Alt 2282 (Regel 14): 9-handlings minnestabell som får exakt samma `r_b1 = ΔE − w_skada · skada`-signal.
     TabellB1,
+    /// Alt 2323 (Steg L1 i LeCun-planen `Alt 2285`): korttidsminne/replay (`1`), 2-stegsplanering (`2`), RLS-osäkerhet (`4`).
+    LarL1(f64, u16, u8),
     /// Enkel stillastående-baslinje utan hjärna (Regel 14): väljer `a = 0` med sannolikhet `p`, annars jämnt bland `1..8`.
     StannaSlump(f64),
 }
@@ -116,6 +118,7 @@ impl Formaga {
             Formaga::FrystKritB1(p, a) => format!("fryst_krit_b1({p}, {a})"),
             Formaga::LarB1UtanSkada(p, a) => format!("lar_b1_utan_skada({p}, {a})"),
             Formaga::TabellB1 => "tabell_b1".into(),
+            Formaga::LarL1(p, a, m) => format!("lar_l1({p}, {a}, {m})"),
             Formaga::StannaSlump(p) => format!("stanna_slump({p})"),
         }
     }
@@ -149,6 +152,7 @@ impl Formaga {
                 | Formaga::StrykB1Krit(_, _)
                 | Formaga::FrystKritB1(_, _)
                 | Formaga::LarB1UtanSkada(_, _)
+                | Formaga::LarL1(_, _, _)
         )
     }
 
@@ -177,6 +181,7 @@ impl Formaga {
                 | Formaga::StrykB1Krit(_, _)
                 | Formaga::FrystKritB1(_, _)
                 | Formaga::LarB1UtanSkada(_, _)
+                | Formaga::LarL1(_, _, _)
         )
     }
 
@@ -218,6 +223,15 @@ impl Formaga {
                 anvand_w_skada: false,
                 r_klamp,
             }),
+            _ => None,
+        }
+    }
+
+    pub fn cfg_l1(self, r_klamp: f64) -> Option<crate::hjarnal1::HjL1Config> {
+        match self {
+            Formaga::LarL1(_, alpha_tio, mask) => {
+                Some(crate::hjarnal1::HjL1Config::fran_mask(mask, alpha_tio, r_klamp))
+            }
             _ => None,
         }
     }

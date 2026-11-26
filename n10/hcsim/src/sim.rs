@@ -11,6 +11,7 @@ use crate::formaga::{Formaga, HjarnArm, Intagslasare, Minnestabell, EPS_ARV_XOR,
 use crate::hjarna::{self, gauss, lott_bland_max, Hj};
 use crate::hjarna2008::Hj2008;
 use crate::hjarnab1::{GenB1, HjB1, S_B1};
+use crate::hjarnal1::{GenL1, HjL1};
 use crate::klimat::Klimat;
 use crate::rng::Rng;
 use crate::tal::{self, vmax_ruta, A_N, SIGMA_MUT};
@@ -128,6 +129,11 @@ pub struct Dino {
     pub hj_b1: Option<Box<HjB1>>,
     #[serde(skip)]
     pub gen_b1: Option<GenB1>,
+    /// Alt 2323 (Steg L1 i LeCun-planen): korttidsminne, 2-stegsplanering och osäkerhetsgen `w_osak`.
+    #[serde(skip)]
+    pub hj_l1: Option<Box<HjL1>>,
+    #[serde(skip)]
+    pub gen_l1: Option<GenL1>,
     #[serde(skip)]
     pub skada: f64,
     #[serde(skip)]
@@ -1202,6 +1208,8 @@ impl Sim {
                     senaste_de: None,
                     hj_b1: None,
                     gen_b1: None,
+                    hj_l1: None,
+                    gen_l1: None,
                     skada: 0.0,
                     senaste_skada: 0.0,
                     senaste_r_b1: None,
@@ -1333,10 +1341,15 @@ impl Sim {
                 let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                 d.gen_b1 = Some(GenB1::slump(&mut gg));
             }
+            if d.gen_l1.is_none() {
+                let mut gg = Rng::new(d.uid ^ 0x2323_1A17_0001);
+                d.gen_l1 = Some(GenL1::slump(&mut gg));
+            }
             d.skada = 0.0;
             d.senaste_skada = 0.0;
             d.senaste_r_b1 = None;
             d.hj_b1 = None;
+            d.hj_l1 = None;
         }
         self.rovdjur_b1 = Some(RovdjurB1 {
             param,
@@ -1573,14 +1586,22 @@ impl Sim {
                     d.hj2059 = None;
                     d.senaste_de = None;
                 }
-                if d.formaga.cfg_b1(10.0).is_some() || d.formaga.ar_tabell_b1() {
+                if d.formaga.cfg_b1(10.0).is_some()
+                    || d.formaga.cfg_l1(10.0).is_some()
+                    || d.formaga.ar_tabell_b1()
+                {
                     d.hj_b1 = None;
+                    d.hj_l1 = None;
                     d.senaste_r_b1 = None;
                     d.skada = 0.0;
                     d.senaste_skada = 0.0;
                     if d.gen_b1.is_none() {
                         let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                         d.gen_b1 = Some(GenB1::slump(&mut gg));
+                    }
+                    if d.gen_l1.is_none() {
+                        let mut gg = Rng::new(d.uid ^ 0x2323_1A17_0001);
+                        d.gen_l1 = Some(GenL1::slump(&mut gg));
                     }
                 }
             }
@@ -2733,6 +2754,46 @@ impl Sim {
                 self.notera_utforsk_val(idx, a, !slump);
                 a
             }
+            Formaga::LarL1(eps, _, _) => {
+                let r_klamp = self
+                    .rovdjur_b1
+                    .as_ref()
+                    .map(|r| r.param.r_klamp)
+                    .unwrap_or(20.0);
+                let cfg = formaga.cfg_l1(r_klamp).unwrap();
+                let s_b1 = self.sinnen_b1(idx, s);
+                let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
+                let slump = eps > 0.0 && rng.f() < eps;
+                let a = {
+                    let d = &mut self.djur[idx];
+                    if d.gen_b1.is_none() {
+                        let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
+                        d.gen_b1 = Some(GenB1::slump(&mut gg));
+                    }
+                    if d.gen_l1.is_none() {
+                        let mut gg = Rng::new(d.uid ^ 0x2323_1A17_0001);
+                        d.gen_l1 = Some(GenL1::slump(&mut gg));
+                    }
+                    if d.hj_l1.is_none() {
+                        let gb1 = d.gen_b1.as_ref().unwrap();
+                        let gl1 = d.gen_l1.as_ref().unwrap();
+                        d.hj_l1 = Some(Box::new(HjL1::fran_gen(&d.hj.gen, gb1, gl1, d.uid, cfg)));
+                    }
+                    let hjl = d.hj_l1.as_mut().unwrap();
+                    hjl.cfg = cfg;
+                    hjl.vanta_beloning = d.senaste_r_b1.take();
+                    if slump {
+                        let a_m = hjl.minst_besokta_handling(&mut rng);
+                        hjl.lar_och_satt(&s_b1, true, a_m);
+                        a_m
+                    } else {
+                        hjl.valj_lott(&s_b1, true, &mut rng)
+                    }
+                };
+                self.djur[idx].egen_rng = rng;
+                self.notera_utforsk_val(idx, a, !slump);
+                a
+            }
             Formaga::StannaSlump(p) => {
                 let a = if p > 0.0 && self.djur[idx].egen_rng.f() < p {
                     0
@@ -3131,6 +3192,7 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
+                self.djur[i].hj_l1 = None;
                 if let Some(ref mut rov) = self.rovdjur_b1 {
                     let ar_vuxen = self.djur[i].age >= tal::LITEN;
                     if markt {
@@ -3158,6 +3220,7 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
+                self.djur[i].hj_l1 = None;
                 self.rak.dod_svalt += 1;
                 self.rak.dod_svalt_ar += 1;
             } else if self.djur[i].age >= self.liv_steg.unwrap_or(tal::LIV) {
@@ -3173,6 +3236,7 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
+                self.djur[i].hj_l1 = None;
                 self.rak.dod_alder += 1;
                 self.rak.dod_alder_ar += 1;
             }
@@ -3206,6 +3270,10 @@ impl Sim {
                 (Some(mg), Some(fg)) => Some(GenB1::arv(mg, fg, uid)),
                 _ => None,
             };
+            let gen_l1 = match (&self.djur[mor].gen_l1, &self.djur[far].gen_l1) {
+                (Some(mg), Some(fg)) => Some(GenL1::arv(mg, fg, uid)),
+                _ => None,
+            };
             let eps = arv_eps(self.djur[mor].eps, self.djur[far].eps, uid);
             let unge = Dino {
                 lev: true,
@@ -3230,6 +3298,8 @@ impl Sim {
                 senaste_de: None,
                 hj_b1: None,
                 gen_b1,
+                hj_l1: None,
+                gen_l1,
                 skada: 0.0,
                 senaste_skada: 0.0,
                 senaste_r_b1: None,
