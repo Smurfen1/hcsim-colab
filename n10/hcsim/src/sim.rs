@@ -11,7 +11,7 @@ use crate::formaga::{Formaga, HjarnArm, Intagslasare, Minnestabell, EPS_ARV_XOR,
 use crate::hjarna::{self, gauss, lott_bland_max, Hj};
 use crate::hjarna2008::Hj2008;
 use crate::hjarnab1::{GenB1, HjB1, S_B1};
-use crate::hjarnal1::{GenL1, HjL1, SkuggaDjurL1, SkuggaL1Ack};
+use crate::hjarnal2::{GenL2, HjL2, KroppL2, MODE1_KOST_FAKTOR};
 use crate::klimat::Klimat;
 use crate::rng::Rng;
 use crate::tal::{self, vmax_ruta, A_N, SIGMA_MUT};
@@ -129,14 +129,6 @@ pub struct Dino {
     pub hj_b1: Option<Box<HjB1>>,
     #[serde(skip)]
     pub gen_b1: Option<GenB1>,
-    /// Alt 2323 (Steg L1 i LeCun-planen): korttidsminne, 2-stegsplanering och osäkerhetsgen `w_osak`.
-    #[serde(skip)]
-    pub hj_l1: Option<Box<HjL1>>,
-    #[serde(skip)]
-    pub gen_l1: Option<GenL1>,
-    /// Alt 2312 (skuggläge v2, läser bara; None när skuggan är av).
-    #[serde(skip)]
-    pub skugga_djur: Option<Box<SkuggaDjurL1>>,
     #[serde(skip)]
     pub skada: f64,
     #[serde(skip)]
@@ -145,6 +137,11 @@ pub struct Dino {
     pub senaste_r_b1: Option<f64>,
     #[serde(skip)]
     pub forra_kron_grann_medel: f64,
+    /// Alt 2348 (Steg L2): biologisk inställare (delade kritiker + Mode-2 → Mode-1).
+    #[serde(skip)]
+    pub hj_l2: Option<Box<HjL2>>,
+    #[serde(skip)]
+    pub gen_l2: Option<GenL2>,
 }
 
 fn default_eps() -> f64 {
@@ -1128,12 +1125,6 @@ pub struct Sim {
     /// Alt 2282 (Skede B, B1; None som standard): flygande rovdjurstryck, krontäcke och skadefysik.
     #[serde(skip)]
     pub rovdjur_b1: Option<RovdjurB1>,
-    /// Världens frö (Alt 2326: blandas in i `HjL1::replay_rng` så djur med samma uid skiljs åt mellan världar).
-    #[serde(skip)]
-    pub varld_fro: u64,
-    /// Alt 2312 (skuggläge v2, av som standard; läser bara och rör aldrig djurens tillstånd eller slump).
-    #[serde(skip)]
-    pub skugga_l1: Option<SkuggaL1Ack>,
 }
 
 impl Sim {
@@ -1217,13 +1208,12 @@ impl Sim {
                     senaste_de: None,
                     hj_b1: None,
                     gen_b1: None,
-                    hj_l1: None,
-                    gen_l1: None,
-                    skugga_djur: None,
                     skada: 0.0,
                     senaste_skada: 0.0,
                     senaste_r_b1: None,
                     forra_kron_grann_medel: 0.0,
+                    hj_l2: None,
+                    gen_l2: None,
                 });
                 nasta_uid += 1;
             }
@@ -1284,8 +1274,6 @@ impl Sim {
             fodslar_markt: 0,
             fodslar_omarkt: 0,
             rovdjur_b1: None,
-            varld_fro: fro,
-            skugga_l1: None,
         }
     }
 
@@ -1353,18 +1341,16 @@ impl Sim {
                 let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                 d.gen_b1 = Some(GenB1::slump(&mut gg));
             }
-            if d.gen_l1.is_none() {
-                let mut gg = Rng::new(d.uid ^ 0x2323_1A17_0001);
-                d.gen_l1 = Some(GenL1::slump(&mut gg));
+            if d.gen_l2.is_none() {
+                let mut gg2 = Rng::new(d.uid ^ 0x2348_1A17_0001);
+                d.gen_l2 = Some(GenL2::slump(&mut gg2));
             }
             d.skada = 0.0;
             d.senaste_skada = 0.0;
             d.senaste_r_b1 = None;
             d.hj_b1 = None;
-            d.hj_l1 = None;
-            d.skugga_djur = None;
+            d.hj_l2 = None;
         }
-        self.varld_fro = fro;
         self.rovdjur_b1 = Some(RovdjurB1 {
             param,
             kron,
@@ -1601,22 +1587,22 @@ impl Sim {
                     d.senaste_de = None;
                 }
                 if d.formaga.cfg_b1(10.0).is_some()
-                    || d.formaga.cfg_l1(10.0).is_some()
+                    || d.formaga.cfg_l2(10.0).is_some()
                     || d.formaga.ar_tabell_b1()
                 {
                     d.hj_b1 = None;
-                    d.hj_l1 = None;
-                    d.skugga_djur = None;
+                    d.hj_l2 = None;
                     d.senaste_r_b1 = None;
+                    d.senaste_de = None;
                     d.skada = 0.0;
                     d.senaste_skada = 0.0;
                     if d.gen_b1.is_none() {
                         let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                         d.gen_b1 = Some(GenB1::slump(&mut gg));
                     }
-                    if d.gen_l1.is_none() {
-                        let mut gg = Rng::new(d.uid ^ 0x2323_1A17_0001);
-                        d.gen_l1 = Some(GenL1::slump(&mut gg));
+                    if d.gen_l2.is_none() {
+                        let mut gg2 = Rng::new(d.uid ^ 0x2348_1A17_0001);
+                        d.gen_l2 = Some(GenL2::slump(&mut gg2));
                     }
                 }
             }
@@ -2061,7 +2047,16 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            self.djur[idx].e -= hjkost;
+            let kost_hj = if self.djur[idx]
+                .hj_l2
+                .as_ref()
+                .is_some_and(|h| h.senaste_var_mode1)
+            {
+                hjkost * MODE1_KOST_FAKTOR
+            } else {
+                hjkost
+            };
+            self.djur[idx].e -= kost_hj;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2186,7 +2181,16 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            self.djur[idx].e -= hjkost;
+            let kost_hj = if self.djur[idx]
+                .hj_l2
+                .as_ref()
+                .is_some_and(|h| h.senaste_var_mode1)
+            {
+                hjkost * MODE1_KOST_FAKTOR
+            } else {
+                hjkost
+            };
+            self.djur[idx].e -= kost_hj;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2273,7 +2277,16 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            self.djur[idx].e -= hjkost;
+            let kost_hj = if self.djur[idx]
+                .hj_l2
+                .as_ref()
+                .is_some_and(|h| h.senaste_var_mode1)
+            {
+                hjkost * MODE1_KOST_FAKTOR
+            } else {
+                hjkost
+            };
+            self.djur[idx].e -= kost_hj;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2375,7 +2388,16 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            self.djur[idx].e -= hjkost;
+            let kost_hj = if self.djur[idx]
+                .hj_l2
+                .as_ref()
+                .is_some_and(|h| h.senaste_var_mode1)
+            {
+                hjkost * MODE1_KOST_FAKTOR
+            } else {
+                hjkost
+            };
+            self.djur[idx].e -= kost_hj;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2769,63 +2791,52 @@ impl Sim {
                 self.notera_utforsk_val(idx, a, !slump);
                 a
             }
-            Formaga::LarL1(eps, _, _) => {
+            Formaga::LarL2Konst(eps, _)
+            | Formaga::LarL2Inst(eps, _)
+            | Formaga::LarL2M1(eps, _)
+            | Formaga::LarL2Full(eps, _)
+            | Formaga::StrykL2Inst(eps, _) => {
                 let r_klamp = self
                     .rovdjur_b1
                     .as_ref()
                     .map(|r| r.param.r_klamp)
-                    .unwrap_or(20.0);
-                let cfg = formaga.cfg_l1(r_klamp).unwrap();
+                    .unwrap_or(100.0);
+                let cfg = formaga.cfg_l2(r_klamp).unwrap();
                 let s_b1 = self.sinnen_b1(idx, s);
-                let varld_fro = self.varld_fro;
-                let mut skugga_ack = self.skugga_l1.take();
+                let e_skala = self.e_skala;
                 let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
                 let slump = eps > 0.0 && rng.f() < eps;
                 let a = {
                     let d = &mut self.djur[idx];
-                    let var_angrepp = d.senaste_skada > 0.0;
                     if d.gen_b1.is_none() {
                         let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                         d.gen_b1 = Some(GenB1::slump(&mut gg));
                     }
-                    if d.gen_l1.is_none() {
-                        let mut gg = Rng::new(d.uid ^ 0x2323_1A17_0001);
-                        d.gen_l1 = Some(GenL1::slump(&mut gg));
+                    if d.gen_l2.is_none() {
+                        let mut gg2 = Rng::new(d.uid ^ 0x2348_1A17_0001);
+                        d.gen_l2 = Some(GenL2::slump(&mut gg2));
                     }
-                    if d.hj_l1.is_none() {
+                    if d.hj_l2.is_none() {
                         let gb1 = d.gen_b1.as_ref().unwrap();
-                        let gl1 = d.gen_l1.as_ref().unwrap();
-                        d.hj_l1 = Some(Box::new(HjL1::fran_gen(
-                            &d.hj.gen, gb1, gl1, varld_fro, d.uid, cfg,
-                        )));
+                        d.hj_l2 = Some(Box::new(HjL2::fran_gen(&d.hj.gen, gb1, cfg)));
                     }
-                    if skugga_ack.is_some() && d.skugga_djur.is_none() {
-                        d.skugga_djur = Some(Box::new(SkuggaDjurL1::ny()));
-                    }
-                    let hjl = d.hj_l1.as_mut().unwrap();
+                    let w_skada = d.gen_b1.as_ref().map(|g| g.w_skada).unwrap_or(0.0);
+                    let gl2 = *d.gen_l2.as_ref().unwrap();
+                    let kropp = KroppL2::fran_djur(d.e, e_skala, d.skada, d.age);
+                    let hjl = d.hj_l2.as_mut().unwrap();
                     hjl.cfg = cfg;
-                    hjl.vanta_beloning = d.senaste_r_b1.take();
-                    let skugga_arg = match (d.skugga_djur.as_deref_mut(), skugga_ack.as_mut()) {
-                        (Some(sd), Some(sa)) => Some((sd, sa, var_angrepp)),
-                        _ => None,
-                    };
+                    if let Some(de) = d.senaste_de.take() {
+                        hjl.vanta_de = Some(de);
+                        hjl.vanta_skada = Some(d.senaste_skada);
+                    }
                     if slump {
                         let a_m = hjl.minst_besokta_handling(&mut rng);
-                        hjl.lar_och_satt_med_skugga(&s_b1, true, a_m, skugga_arg);
+                        hjl.lar_och_satt(&s_b1, true, a_m);
                         a_m
                     } else {
-                        let ba = hjl.valj_lott_med_skugga(&s_b1, true, &mut rng, skugga_arg);
-                        if skugga_ack
-                            .as_ref()
-                            .is_some_and(|sa| sa.trasig_rng_lacka_for_prov)
-                        {
-                            // Endast för avsnitt 2:s rödprov: simulerar en felaktig skugga som drar ur egen_rng.
-                            let _ = lott_bland_max(&[0.0; A_N], &mut rng);
-                        }
-                        ba
+                        hjl.valj_lott(&s_b1, true, w_skada, &gl2, kropp, &mut rng)
                     }
                 };
-                self.skugga_l1 = skugga_ack;
                 self.djur[idx].egen_rng = rng;
                 self.notera_utforsk_val(idx, a, !slump);
                 a
@@ -3228,8 +3239,7 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
-                self.djur[i].hj_l1 = None;
-                self.djur[i].skugga_djur = None;
+                self.djur[i].hj_l2 = None;
                 if let Some(ref mut rov) = self.rovdjur_b1 {
                     let ar_vuxen = self.djur[i].age >= tal::LITEN;
                     if markt {
@@ -3257,8 +3267,7 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
-                self.djur[i].hj_l1 = None;
-                self.djur[i].skugga_djur = None;
+                self.djur[i].hj_l2 = None;
                 self.rak.dod_svalt += 1;
                 self.rak.dod_svalt_ar += 1;
             } else if self.djur[i].age >= self.liv_steg.unwrap_or(tal::LIV) {
@@ -3274,8 +3283,7 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
-                self.djur[i].hj_l1 = None;
-                self.djur[i].skugga_djur = None;
+                self.djur[i].hj_l2 = None;
                 self.rak.dod_alder += 1;
                 self.rak.dod_alder_ar += 1;
             }
@@ -3309,8 +3317,8 @@ impl Sim {
                 (Some(mg), Some(fg)) => Some(GenB1::arv(mg, fg, uid)),
                 _ => None,
             };
-            let gen_l1 = match (&self.djur[mor].gen_l1, &self.djur[far].gen_l1) {
-                (Some(mg), Some(fg)) => Some(GenL1::arv(mg, fg, uid)),
+            let gen_l2 = match (&self.djur[mor].gen_l2, &self.djur[far].gen_l2) {
+                (Some(mg), Some(fg)) => Some(GenL2::arv(mg, fg, uid)),
                 _ => None,
             };
             let eps = arv_eps(self.djur[mor].eps, self.djur[far].eps, uid);
@@ -3337,13 +3345,12 @@ impl Sim {
                 senaste_de: None,
                 hj_b1: None,
                 gen_b1,
-                hj_l1: None,
-                gen_l1,
-                skugga_djur: None,
                 skada: 0.0,
                 senaste_skada: 0.0,
                 senaste_r_b1: None,
                 forra_kron_grann_medel: 0.0,
+                hj_l2: None,
+                gen_l2,
             };
             self.nasta_uid += 1;
             let formaga_unge = unge.formaga;

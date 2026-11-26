@@ -76,8 +76,16 @@ pub enum Formaga {
     LarB1UtanSkada(f64, u16),
     /// Alt 2282 (Regel 14): 9-handlings minnestabell som får exakt samma `r_b1 = ΔE − w_skada · skada`-signal.
     TabellB1,
-    /// Alt 2323 (Steg L1 i LeCun-planen `Alt 2285`): korttidsminne/replay (`1`), 2-stegsplanering (`2`), RLS-osäkerhet (`4`).
-    LarL1(f64, u16, u8),
+    /// Alt 2348 (Steg L2): delade kritiker utan inställargener (`theta = 0` låst, superpositionskontroll mot `LarB1Krit`).
+    LarL2Konst(f64, u16),
+    /// Alt 2348 (Steg L2-A): delade kritiker + biologisk inställare (`theta_e, theta_s, theta_j`).
+    LarL2Inst(f64, u16),
+    /// Alt 2348 (Steg L2-B): enbart Mode-2 → Mode-1-kompilering ovanpå fast B1-säkerhetsvikt.
+    LarL2M1(f64, u16),
+    /// Alt 2348 (Steg L2 full): biologisk inställare + Mode-2 → Mode-1-kompilering.
+    LarL2Full(f64, u16),
+    /// Alt 2348 strykprov: samma biologiska inställare som `LarL2Inst`, men världsmodellen avstängd i handlingsvalet.
+    StrykL2Inst(f64, u16),
     /// Enkel stillastående-baslinje utan hjärna (Regel 14): väljer `a = 0` med sannolikhet `p`, annars jämnt bland `1..8`.
     StannaSlump(f64),
 }
@@ -118,7 +126,11 @@ impl Formaga {
             Formaga::FrystKritB1(p, a) => format!("fryst_krit_b1({p}, {a})"),
             Formaga::LarB1UtanSkada(p, a) => format!("lar_b1_utan_skada({p}, {a})"),
             Formaga::TabellB1 => "tabell_b1".into(),
-            Formaga::LarL1(p, a, m) => format!("lar_l1({p}, {a}, {m})"),
+            Formaga::LarL2Konst(p, a) => format!("lar_l2_konst({p}, {a})"),
+            Formaga::LarL2Inst(p, a) => format!("lar_l2_inst({p}, {a})"),
+            Formaga::LarL2M1(p, a) => format!("lar_l2_m1({p}, {a})"),
+            Formaga::LarL2Full(p, a) => format!("lar_l2_full({p}, {a})"),
+            Formaga::StrykL2Inst(p, a) => format!("stryk_l2_inst({p}, {a})"),
             Formaga::StannaSlump(p) => format!("stanna_slump({p})"),
         }
     }
@@ -152,7 +164,11 @@ impl Formaga {
                 | Formaga::StrykB1Krit(_, _)
                 | Formaga::FrystKritB1(_, _)
                 | Formaga::LarB1UtanSkada(_, _)
-                | Formaga::LarL1(_, _, _)
+                | Formaga::LarL2Konst(_, _)
+                | Formaga::LarL2Inst(_, _)
+                | Formaga::LarL2M1(_, _)
+                | Formaga::LarL2Full(_, _)
+                | Formaga::StrykL2Inst(_, _)
         )
     }
 
@@ -181,7 +197,11 @@ impl Formaga {
                 | Formaga::StrykB1Krit(_, _)
                 | Formaga::FrystKritB1(_, _)
                 | Formaga::LarB1UtanSkada(_, _)
-                | Formaga::LarL1(_, _, _)
+                | Formaga::LarL2Konst(_, _)
+                | Formaga::LarL2Inst(_, _)
+                | Formaga::LarL2M1(_, _)
+                | Formaga::LarL2Full(_, _)
+                | Formaga::StrykL2Inst(_, _)
         )
     }
 
@@ -227,11 +247,43 @@ impl Formaga {
         }
     }
 
-    pub fn cfg_l1(self, r_klamp: f64) -> Option<crate::hjarnal1::HjL1Config> {
+    pub fn cfg_l2(self, r_klamp: f64) -> Option<crate::hjarnal2::HjL2Config> {
         match self {
-            Formaga::LarL1(_, alpha_tio, mask) => {
-                Some(crate::hjarnal1::HjL1Config::fran_mask(mask, alpha_tio, r_klamp))
-            }
+            Formaga::LarL2Konst(_, alpha_tio) => Some(crate::hjarnal2::HjL2Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_installare: false,
+                med_mode1: false,
+                r_klamp,
+            }),
+            Formaga::LarL2Inst(_, alpha_tio) => Some(crate::hjarnal2::HjL2Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_installare: true,
+                med_mode1: false,
+                r_klamp,
+            }),
+            Formaga::LarL2M1(_, alpha_tio) => Some(crate::hjarnal2::HjL2Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_installare: false,
+                med_mode1: true,
+                r_klamp,
+            }),
+            Formaga::LarL2Full(_, alpha_tio) => Some(crate::hjarnal2::HjL2Config {
+                stryk_handling_i_val: false,
+                rls_alpha_tio: alpha_tio,
+                med_installare: true,
+                med_mode1: true,
+                r_klamp,
+            }),
+            Formaga::StrykL2Inst(_, alpha_tio) => Some(crate::hjarnal2::HjL2Config {
+                stryk_handling_i_val: true,
+                rls_alpha_tio: alpha_tio,
+                med_installare: true,
+                med_mode1: false,
+                r_klamp,
+            }),
             _ => None,
         }
     }
