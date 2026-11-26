@@ -11,7 +11,7 @@ use crate::formaga::{Formaga, HjarnArm, Intagslasare, Minnestabell, EPS_ARV_XOR,
 use crate::hjarna::{self, gauss, lott_bland_max, Hj};
 use crate::hjarna2008::Hj2008;
 use crate::hjarnab1::{GenB1, HjB1, S_B1};
-use crate::hjarnal1::{GenL1, HjL1};
+use crate::hjarnal1::{GenL1, HjL1, SkuggaDjurL1, SkuggaL1Ack};
 use crate::klimat::Klimat;
 use crate::rng::Rng;
 use crate::tal::{self, vmax_ruta, A_N, SIGMA_MUT};
@@ -134,6 +134,9 @@ pub struct Dino {
     pub hj_l1: Option<Box<HjL1>>,
     #[serde(skip)]
     pub gen_l1: Option<GenL1>,
+    /// Alt 2312 (skuggläge v2, läser bara; None när skuggan är av).
+    #[serde(skip)]
+    pub skugga_djur: Option<Box<SkuggaDjurL1>>,
     #[serde(skip)]
     pub skada: f64,
     #[serde(skip)]
@@ -1125,6 +1128,12 @@ pub struct Sim {
     /// Alt 2282 (Skede B, B1; None som standard): flygande rovdjurstryck, krontäcke och skadefysik.
     #[serde(skip)]
     pub rovdjur_b1: Option<RovdjurB1>,
+    /// Världens frö (Alt 2326: blandas in i `HjL1::replay_rng` så djur med samma uid skiljs åt mellan världar).
+    #[serde(skip)]
+    pub varld_fro: u64,
+    /// Alt 2312 (skuggläge v2, av som standard; läser bara och rör aldrig djurens tillstånd eller slump).
+    #[serde(skip)]
+    pub skugga_l1: Option<SkuggaL1Ack>,
 }
 
 impl Sim {
@@ -1210,6 +1219,7 @@ impl Sim {
                     gen_b1: None,
                     hj_l1: None,
                     gen_l1: None,
+                    skugga_djur: None,
                     skada: 0.0,
                     senaste_skada: 0.0,
                     senaste_r_b1: None,
@@ -1274,6 +1284,8 @@ impl Sim {
             fodslar_markt: 0,
             fodslar_omarkt: 0,
             rovdjur_b1: None,
+            varld_fro: fro,
+            skugga_l1: None,
         }
     }
 
@@ -1350,7 +1362,9 @@ impl Sim {
             d.senaste_r_b1 = None;
             d.hj_b1 = None;
             d.hj_l1 = None;
+            d.skugga_djur = None;
         }
+        self.varld_fro = fro;
         self.rovdjur_b1 = Some(RovdjurB1 {
             param,
             kron,
@@ -1592,6 +1606,7 @@ impl Sim {
                 {
                     d.hj_b1 = None;
                     d.hj_l1 = None;
+                    d.skugga_djur = None;
                     d.senaste_r_b1 = None;
                     d.skada = 0.0;
                     d.senaste_skada = 0.0;
@@ -2762,10 +2777,13 @@ impl Sim {
                     .unwrap_or(20.0);
                 let cfg = formaga.cfg_l1(r_klamp).unwrap();
                 let s_b1 = self.sinnen_b1(idx, s);
+                let varld_fro = self.varld_fro;
+                let mut skugga_ack = self.skugga_l1.take();
                 let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
                 let slump = eps > 0.0 && rng.f() < eps;
                 let a = {
                     let d = &mut self.djur[idx];
+                    let var_angrepp = d.senaste_skada > 0.0;
                     if d.gen_b1.is_none() {
                         let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                         d.gen_b1 = Some(GenB1::slump(&mut gg));
@@ -2777,19 +2795,37 @@ impl Sim {
                     if d.hj_l1.is_none() {
                         let gb1 = d.gen_b1.as_ref().unwrap();
                         let gl1 = d.gen_l1.as_ref().unwrap();
-                        d.hj_l1 = Some(Box::new(HjL1::fran_gen(&d.hj.gen, gb1, gl1, d.uid, cfg)));
+                        d.hj_l1 = Some(Box::new(HjL1::fran_gen(
+                            &d.hj.gen, gb1, gl1, varld_fro, d.uid, cfg,
+                        )));
+                    }
+                    if skugga_ack.is_some() && d.skugga_djur.is_none() {
+                        d.skugga_djur = Some(Box::new(SkuggaDjurL1::ny()));
                     }
                     let hjl = d.hj_l1.as_mut().unwrap();
                     hjl.cfg = cfg;
                     hjl.vanta_beloning = d.senaste_r_b1.take();
+                    let skugga_arg = match (d.skugga_djur.as_deref_mut(), skugga_ack.as_mut()) {
+                        (Some(sd), Some(sa)) => Some((sd, sa, var_angrepp)),
+                        _ => None,
+                    };
                     if slump {
                         let a_m = hjl.minst_besokta_handling(&mut rng);
-                        hjl.lar_och_satt(&s_b1, true, a_m);
+                        hjl.lar_och_satt_med_skugga(&s_b1, true, a_m, skugga_arg);
                         a_m
                     } else {
-                        hjl.valj_lott(&s_b1, true, &mut rng)
+                        let ba = hjl.valj_lott_med_skugga(&s_b1, true, &mut rng, skugga_arg);
+                        if skugga_ack
+                            .as_ref()
+                            .is_some_and(|sa| sa.trasig_rng_lacka_for_prov)
+                        {
+                            // Endast för avsnitt 2:s rödprov: simulerar en felaktig skugga som drar ur egen_rng.
+                            let _ = lott_bland_max(&[0.0; A_N], &mut rng);
+                        }
+                        ba
                     }
                 };
+                self.skugga_l1 = skugga_ack;
                 self.djur[idx].egen_rng = rng;
                 self.notera_utforsk_val(idx, a, !slump);
                 a
@@ -3193,6 +3229,7 @@ impl Sim {
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
                 self.djur[i].hj_l1 = None;
+                self.djur[i].skugga_djur = None;
                 if let Some(ref mut rov) = self.rovdjur_b1 {
                     let ar_vuxen = self.djur[i].age >= tal::LITEN;
                     if markt {
@@ -3221,6 +3258,7 @@ impl Sim {
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
                 self.djur[i].hj_l1 = None;
+                self.djur[i].skugga_djur = None;
                 self.rak.dod_svalt += 1;
                 self.rak.dod_svalt_ar += 1;
             } else if self.djur[i].age >= self.liv_steg.unwrap_or(tal::LIV) {
@@ -3237,6 +3275,7 @@ impl Sim {
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
                 self.djur[i].hj_l1 = None;
+                self.djur[i].skugga_djur = None;
                 self.rak.dod_alder += 1;
                 self.rak.dod_alder_ar += 1;
             }
@@ -3300,6 +3339,7 @@ impl Sim {
                 gen_b1,
                 hj_l1: None,
                 gen_l1,
+                skugga_djur: None,
                 skada: 0.0,
                 senaste_skada: 0.0,
                 senaste_r_b1: None,

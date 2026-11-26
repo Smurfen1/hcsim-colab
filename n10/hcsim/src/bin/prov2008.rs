@@ -61,6 +61,8 @@ const EGEN_LOGG_2267: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2267/korning.
 const EGEN_LOGG_2270: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2270/korning.logg";
 const EGEN_LOGG_2282: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2282/korning.logg";
 const EGEN_LOGG_2323: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2323/korning.logg";
+const EGEN_LOGG_2312: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2312/korning.logg";
+const EGEN_LOGG_2341: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2341/korning.logg";
 const SPEGEL_LOGG: &str = "/home/hakan/sandbox/pi/work/hcsim/vminfo-0c11afa/korning.logg";
 
 static LOGG_LAS: Mutex<()> = Mutex::new(());
@@ -1673,8 +1675,170 @@ fn main() {
                 }
             }
         }
+        Some("skugga2312") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "341-360".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let mat_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(20);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2312/skugga2312-resultat.md"));
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match kora_skugga2312(&fron, inkor_ar, mat_ar, tradar, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    live_logg_med(EGEN_LOGG_2312, "Alt 2312", &format!("FEL i skugga2312: {e}"));
+                    eprintln!("FEL: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("slaihops_skugga2312") => {
+            let in_str = v("--in").unwrap_or_default();
+            let filer: Vec<PathBuf> = in_str
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(PathBuf::from)
+                .collect();
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2312/skugga2312-sammanslagen.md"));
+            match slaihops_skugga2312(&filer) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL slaihops_skugga2312: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("sparb2341") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "261-280".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(50);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2341/sparb2341-resultat.md"));
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match kora_sparb2341(&fron, inkor_ar, tavling_ar, tradar, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    live_logg_med(EGEN_LOGG_2341, "Alt 2341", &format!("FEL i sparb2341: {e}"));
+                    eprintln!("FEL: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("slaihops2341") => {
+            let in_str = v("--in").unwrap_or_default();
+            let filer: Vec<PathBuf> = in_str
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(PathBuf::from)
+                .collect();
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2341/sparb2341-sammanslagen.md"));
+            match slaihops_2341(&filer) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL slaihops2341: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("bekraft2341") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "321-340".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(50);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let mask: u8 = v("--mask")
+                .and_then(|x| x.parse().ok())
+                .expect("--mask MASK (bitmask för vald v2-variant)");
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2341/bekraft2341-resultat.md"));
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match kora_bekraft2341(&fron, mask, inkor_ar, tavling_ar, tradar, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    live_logg_med(EGEN_LOGG_2341, "Alt 2341", &format!("FEL i bekraft2341: {e}"));
+                    eprintln!("FEL: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("slaihops_bekraft2341") => {
+            let in_str = v("--in").unwrap_or_default();
+            let filer: Vec<PathBuf> = in_str
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(PathBuf::from)
+                .collect();
+            let ut_fil = v("--ut")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2341/bekraft2341-sammanslagen.md"));
+            match slaihops_bekraft2341(&filer) {
+                Ok(t) => {
+                    if let Some(p) = ut_fil.parent() {
+                        let _ = create_dir_all(p);
+                    }
+                    let _ = std::fs::write(&ut_fil, &t);
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL slaihops_bekraft2341: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
         _ => {
-            eprintln!("användning: prov2008 ...|sparb2282|slaihops2282|sparb2323|slaihops2323 ...");
+            eprintln!("användning: prov2008 ...|sparb2323|skugga2312|sparb2341|slaihops2341|bekraft2341|slaihops_bekraft2341 ...");
             std::process::exit(2);
         }
     }
@@ -2382,6 +2546,28 @@ fn bootstrap_ci_seed(vals: &[f64], seed: u64) -> (f64, f64, f64) {
         boots.push(samp.iter().sum::<f64>() / n as f64);
     }
     boots.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let lo = boots[(0.025 * (boots.len() - 1) as f64).round() as usize];
+    let hi = boots[(0.975 * (boots.len() - 1) as f64).round() as usize];
+    (med, lo, hi)
+}
+
+fn bootstrap_median_ci_seed(vals: &[f64], seed: u64) -> (f64, f64, f64) {
+    let rena: Vec<f64> = vals.iter().copied().filter(|x| x.is_finite()).collect();
+    if rena.is_empty() {
+        return (f64::NAN, f64::NAN, f64::NAN);
+    }
+    let med = median(rena.clone());
+    let mut rng = Rng::new(seed);
+    let mut boots = Vec::with_capacity(4000);
+    let n = rena.len();
+    for _ in 0..4000 {
+        let mut samp = Vec::with_capacity(n);
+        for _ in 0..n {
+            samp.push(rena[rng.under(n)]);
+        }
+        boots.push(median(samp));
+    }
+    boots.sort_by(|a, b| a.total_cmp(b));
     let lo = boots[(0.025 * (boots.len() - 1) as f64).round() as usize];
     let hi = boots[(0.975 * (boots.len() - 1) as f64).round() as usize];
     (med, lo, hi)
@@ -8635,6 +8821,1237 @@ fn slaihops_2323(filer: &[PathBuf]) -> Result<String, String> {
     Ok(t)
 }
 
+// ---------------------------------------------------------------- Alt 2312 / Alt 2326: Skuggmätning Steg L1 v2
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+struct SkuggaUtfall2312 {
+    fro: u64,
+    #[serde(with = "opt_nan")]
+    s1_kvot: f64,
+    #[serde(with = "opt_nan")]
+    s1_lang_kvot: f64,
+    s1_kort_n: u64,
+    s1_mellan_n: u64,
+    s1_lang_n: u64,
+    #[serde(with = "opt_nan")]
+    s2_tot: f64,
+    #[serde(with = "opt_nan")]
+    s2_inom: f64,
+    #[serde(with = "opt_nan")]
+    s2_utan: f64,
+    s2_tot_n: u64,
+    s2_inom_n: u64,
+    s2_utan_n: u64,
+    #[serde(with = "opt_nan")]
+    s3_andel: f64,
+    s3_annat: u64,
+    s3_totalt: u64,
+    s4_n_anrop: u64,
+    s4_n_neg: u64,
+    s4_n_over100: u64,
+    #[serde(with = "opt_nan")]
+    s4_min_q: f64,
+    #[serde(with = "opt_nan")]
+    s4_mest_storre_andel: f64,
+    s4_mest_storre_u: u64,
+    s4_val_totalt: u64,
+    #[serde(with = "opt_nan")]
+    s5_full_med: f64,
+    #[serde(with = "opt_nan")]
+    s5_bara_norm_med: f64,
+    s5_n: u64,
+    slutpop: f64,
+    utdod: bool,
+    #[serde(with = "opt_nan")]
+    krit_r2: f64,
+    #[serde(with = "opt_nan")]
+    g_kron: f64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct BlockSkugga2312Json {
+    inkor_ar: i64,
+    mat_ar: i64,
+    sec: f64,
+    rader: Vec<SkuggaUtfall2312>,
+}
+
+#[cfg(test)]
+fn kontrollsumma_djur(sim: &Sim) -> u64 {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for d in &sim.djur {
+        for v in [d.lev as u64, d.uid, d.i as u64, d.j as u64, d.e.to_bits()] {
+            h ^= v;
+            h = h.wrapping_mul(0x100000001b3);
+        }
+    }
+    h
+}
+
+fn kor_skugga2312_ett_fro(
+    fro: u64,
+    inkor_ar: i64,
+    mat_ar: i64,
+    progress: Option<&(AtomicUsize, usize, std::time::Instant)>,
+) -> Result<SkuggaUtfall2312, String> {
+    use hcsim::hjarnal1::SkuggaL1Ack;
+    let t0 = std::time::Instant::now();
+    let mut sim = bygg_varld_2238(fro)?;
+    for _ in 0..inkor_ar * STEG_PER_AR {
+        sim.steg();
+    }
+    let l1_av = Formaga::LarL1(0.20, 40, 0);
+    sim.parning_inom_linje = false;
+    sim.aktivera_rovdjur_b1(fro, lasta_b1_param(true, false));
+    sim.hjarn_arm = Some(HjarnArm {
+        namn: "Skugga2312_B1",
+        markta: l1_av,
+        omarkta: l1_av,
+        spegel: false,
+    });
+    sim.markera_halften(fro);
+    sim.skugga_l1 = Some(SkuggaL1Ack::ny(true));
+
+    for _ in 0..mat_ar * STEG_PER_AR {
+        sim.steg();
+    }
+
+    let ack = sim.skugga_l1.as_ref().unwrap();
+    let slutpop = sim.djur.iter().filter(|d| d.lev).count() as f64;
+    let mut gk = Vec::new();
+    let mut kr = Vec::new();
+    for d in sim.djur.iter().filter(|d| d.lev) {
+        if let Some(ref hl) = d.hj_l1 {
+            if hl.steg >= 400 {
+                gk.push(hl.g_kron());
+                let r2 = hl.krit_r2();
+                if r2.is_finite() {
+                    kr.push(r2);
+                }
+            }
+        }
+    }
+    let u = SkuggaUtfall2312 {
+        fro,
+        s1_kvot: ack.s1_kvot().unwrap_or(f64::NAN),
+        s1_lang_kvot: ack.s1_lang_kvot().unwrap_or(f64::NAN),
+        s1_kort_n: ack.s1_kort_n,
+        s1_mellan_n: ack.s1_mellan_n,
+        s1_lang_n: ack.s1_lang_n,
+        s2_tot: ack.s2_tot(),
+        s2_inom: ack.s2_inom(),
+        s2_utan: ack.s2_utan(),
+        s2_tot_n: ack.s2_tot_n,
+        s2_inom_n: ack.s2_inom_n,
+        s2_utan_n: ack.s2_utan_n,
+        s3_andel: ack.s3_andel(),
+        s3_annat: ack.s3_annat,
+        s3_totalt: ack.s3_totalt,
+        s4_n_anrop: ack.s4_q.n_anrop,
+        s4_n_neg: ack.s4_q.n_neg,
+        s4_n_over100: ack.s4_q.n_over100,
+        s4_min_q: if ack.s4_q.n_anrop > 0 { ack.s4_q.min_q } else { f64::NAN },
+        s4_mest_storre_andel: ack.s4_mest_storre_andel(),
+        s4_mest_storre_u: ack.s4_mest_storre_u,
+        s4_val_totalt: ack.s4_val_totalt,
+        s5_full_med: ack.s5_full.median(),
+        s5_bara_norm_med: ack.s5_bara_norm.median(),
+        s5_n: ack.s5_full.n,
+        slutpop,
+        utdod: slutpop < 10.0,
+        krit_r2: median_finita(kr),
+        g_kron: median_finita(gk),
+    };
+
+    let prog_txt = if let Some((klara_a, totalt, t_tot)) = progress {
+        let k = klara_a.fetch_add(1, Ordering::Relaxed) + 1;
+        let ganget = t_tot.elapsed().as_secs_f64();
+        let kvar = if k > 0 && k < *totalt { ganget * (*totalt - k) as f64 / k as f64 } else { 0.0 };
+        format!(" [klara {k}/{totalt}, kört {:.1} min, kvar ~{:.1} min]", ganget / 60.0, kvar / 60.0)
+    } else {
+        String::new()
+    };
+    live_logg_med(
+        EGEN_LOGG_2312,
+        "Alt 2312",
+        &format!(
+            "Frö {fro} klar ({:.1}s): S1={:.3} (n={}/{}/{}) S2={:.4} (inom={:.4}, utan={:.4}) S3={:.4} S4_neg={} (min_q={:.4}, mest>minst={:.3}) S5={:.4} (norm={:.4}) pop={:.0}{prog_txt}",
+            t0.elapsed().as_secs_f64(),
+            u.s1_kvot, u.s1_kort_n, u.s1_mellan_n, u.s1_lang_n,
+            u.s2_tot, u.s2_inom, u.s2_utan,
+            u.s3_andel,
+            u.s4_n_neg, u.s4_min_q, u.s4_mest_storre_andel,
+            u.s5_full_med, u.s5_bara_norm_med,
+            u.slutpop,
+        ),
+    );
+    Ok(u)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct SkuggaDom2312 {
+    l1_a_stryks: bool,
+    l1_a_for_fa_data: bool,
+    l1_b_stryks: bool,
+    s4_b1_fel: bool,
+    s5_drift_over_grans: bool,
+}
+
+fn formatera_rapport_skugga2312(
+    rader: &[SkuggaUtfall2312],
+    inkor_ar: i64,
+    mat_ar: i64,
+    sec: f64,
+) -> (String, SkuggaDom2312) {
+    let n = rader.len();
+    let s1_giltiga: Vec<f64> = rader.iter().map(|r| r.s1_kvot).filter(|x| x.is_finite()).collect();
+    let s1_saknas = n - s1_giltiga.len();
+    let max_saknas = if n == 20 { 5 } else { n / 4 };
+    let (s1_med, s1_lo, s1_hi) = if s1_giltiga.is_empty() {
+        (f64::NAN, f64::NAN, f64::NAN)
+    } else {
+        bootstrap_median_ci_seed(&s1_giltiga, 23121)
+    };
+    let s1_lang_giltiga: Vec<f64> = rader.iter().map(|r| r.s1_lang_kvot).filter(|x| x.is_finite()).collect();
+    let (s1l_med, s1l_lo, s1l_hi) = if s1_lang_giltiga.is_empty() {
+        (f64::NAN, f64::NAN, f64::NAN)
+    } else {
+        bootstrap_median_ci_seed(&s1_lang_giltiga, 23122)
+    };
+
+    let (s2_med, s2_lo, s2_hi) = bootstrap_median_ci_seed(&rader.iter().map(|r| r.s2_tot).collect::<Vec<_>>(), 23123);
+    let (s2i_med, s2i_lo, s2i_hi) = bootstrap_median_ci_seed(&rader.iter().map(|r| r.s2_inom).collect::<Vec<_>>(), 23124);
+    let (s2u_med, s2u_lo, s2u_hi) = bootstrap_median_ci_seed(&rader.iter().map(|r| r.s2_utan).collect::<Vec<_>>(), 23125);
+    let (s3_med, s3_lo, s3_hi) = bootstrap_median_ci_seed(&rader.iter().map(|r| r.s3_andel).collect::<Vec<_>>(), 23126);
+    let s4_fron_neg = rader.iter().filter(|r| r.s4_n_neg > 0).count();
+    let s4_tot_neg: u64 = rader.iter().map(|r| r.s4_n_neg).sum();
+    let s4_tot_over100: u64 = rader.iter().map(|r| r.s4_n_over100).sum();
+    let s4_tot_anrop: u64 = rader.iter().map(|r| r.s4_n_anrop).sum();
+    let s4_min_q_alla = rader
+        .iter()
+        .map(|r| r.s4_min_q)
+        .filter(|x| x.is_finite())
+        .fold(f64::INFINITY, f64::min);
+    let (s4m_med, s4m_lo, s4m_hi) =
+        bootstrap_median_ci_seed(&rader.iter().map(|r| r.s4_mest_storre_andel).collect::<Vec<_>>(), 23127);
+    let (s5_med, s5_lo, s5_hi) = bootstrap_median_ci_seed(&rader.iter().map(|r| r.s5_full_med).collect::<Vec<_>>(), 23128);
+    let (s5n_med, s5n_lo, s5n_hi) =
+        bootstrap_median_ci_seed(&rader.iter().map(|r| r.s5_bara_norm_med).collect::<Vec<_>>(), 23129);
+    let utdod_tot = rader.iter().filter(|r| r.utdod).count();
+    let pop_med = median_finita(rader.iter().map(|r| r.slutpop).collect());
+    let kr_med = median_finita(rader.iter().map(|r| r.krit_r2).collect());
+    let gk_med = median_finita(rader.iter().map(|r| r.g_kron).collect());
+
+    let l1_a_for_fa_data = s1_saknas > max_saknas || !s1_med.is_finite();
+    let l1_a_stryks = !l1_a_for_fa_data && s1_med <= 1.10;
+    let l1_b_stryks = !(s2_med > 0.02 && s3_med > 0.01);
+    let s4_b1_fel = s4_fron_neg >= 1;
+    let s5_drift_over_grans = s5_med >= 0.05;
+
+    let dom = SkuggaDom2312 {
+        l1_a_stryks,
+        l1_a_for_fa_data,
+        l1_b_stryks,
+        s4_b1_fel,
+        s5_drift_over_grans,
+    };
+
+    let mut t = String::new();
+    let _ = writeln!(t, "# Alt 2312 / Alt 2326: Skuggmätning för Steg L1 v2 ({n} världar, inkörning {inkor_ar} år + mätning {mat_ar} år, {sec:.1}s)\n");
+    let _ = writeln!(t, "Låst utfallsregel: `docs/evolution/alt2312-skugga-utfallsregel.md` (gränser ordagrant ur `ritning-lecun-steg-l1-v2.md` avsnitt 2).");
+    let _ = writeln!(t, "Beteende: enbart `LarB1Krit` (`LarL1(0,20, 40, 0)` bitvis identisk med `LarB1Krit`), mätfönster år {inkor_ar}–{}, enbart steg med `steg ≥ 100`. Slutpopulation median {pop_med:.0} (utdöenden {utdod_tot}/{n}), `g_kron` median {gk_med:.3}, `krit_r2` median {kr_med:.3}.\n", inkor_ar + mat_ar);
+
+    let _ = writeln!(t, "## 1. Sammanfattning av de fem måtten (median över {n} frön [95 %-bootstrap-KI])\n");
+    let _ = writeln!(t, "| Mått | Mätt värde | Låst gräns | Utfall |");
+    let _ = writeln!(t, "|---|---|---|---|");
+    let _ = writeln!(
+        t,
+        "| S1, glömska (16 < g ≤ 64 mot g ≤ 16) | {:.4} [{:.4}; {:.4}] (saknas {s1_saknas}/{n}; g > 64 mot g ≤ 16: {:.4} [{:.4}; {:.4}]) | ≤ 1,10 stryker L1-A | {} |",
+        s1_med, s1_lo, s1_hi, s1l_med, s1l_lo, s1l_hi,
+        if l1_a_for_fa_data { "FÖR FÅ DATA (förläng 1 gång till 40 år)" } else if l1_a_stryks { "STRYK L1-A" } else { "L1-A FÅR PRÖVAS" }
+    );
+    let _ = writeln!(
+        t,
+        "| S2, tvåstegsprognos (totalt) | {:.4} [{:.4}; {:.4}] (inom 49: {:.4} [{:.4}; {:.4}]; utanför 32: {:.4} [{:.4}; {:.4}]) | ≤ 0,02 stryker L1-B | {} |",
+        s2_med, s2_lo, s2_hi, s2i_med, s2i_lo, s2i_hi, s2u_med, s2u_lo, s2u_hi,
+        if s2_med > 0.02 { "ÖVER GRÄNS" } else { "UNDER/PÅ GRÄNS" }
+    );
+    let _ = writeln!(
+        t,
+        "| S3, annat val (T=1 mot T=2, γ=0,70) | {:.4} [{:.4}; {:.4}] | ≤ 0,01 stryker L1-B | {} |",
+        s3_med, s3_lo, s3_hi,
+        if s3_med > 0.01 { "ÖVER GRÄNS" } else { "UNDER/PÅ GRÄNS" }
+    );
+    let _ = writeln!(
+        t,
+        "| S4, q = xᵀP_a x före klampning | q < 0 i {s4_fron_neg}/{n} frön ({s4_tot_neg}/{s4_tot_anrop} anrop), q > 100: {s4_tot_over100}, min q = {s4_min_q_alla:.6}; mest prövad u > minst prövad: {:.4} [{:.4}; {:.4}] | ≥ 1 frö med q < 0 | {} |",
+        s4m_med, s4m_lo, s4m_hi,
+        if s4_b1_fel { "FEL I B1:s RLS (pröva även B1 med stabil P_a)" } else { "0 NEGATIVA (ändringen gäller bara L1-C)" }
+    );
+    let _ = writeln!(
+        t,
+        "| S5, kodningens drift (t → t+64) | full {:.4} [{:.4}; {:.4}]; bara norm_z {:.4} [{:.4}; {:.4}] | ≥ 0,05 | {} |",
+        s5_med, s5_lo, s5_hi, s5n_med, s5n_lo, s5n_hi,
+        if s5_drift_over_grans { "ÖVER GRÄNS (pröva rödprov med uppmätt drift)" } else { "UNDER GRÄNS (omkodning byggs ändå för L4)" }
+    );
+
+    let _ = writeln!(t, "\n## 2. Låst beslut ur skuggmätningen (avsnitt 2)\n");
+    let _ = writeln!(
+        t,
+        "- **L1-A (minne & återspelning):** {}",
+        if l1_a_for_fa_data {
+            "För få angrepp i fler än tillåtet antal frön — förläng mätningen en gång till 40 år; stryk inte men bygg inte heller förrän S1 är mätt."
+        } else if l1_a_stryks {
+            "STRYKS (median S1 ≤ 1,10)."
+        } else {
+            "Får byggas och prövas i tävlingen (median S1 > 1,10; bevisar inte nytta)."
+        }
+    );
+    let _ = writeln!(
+        t,
+        "- **L1-B (tvåstegsplanering):** {}",
+        if l1_b_stryks {
+            "STRYKS (kräver både S2 > 0,02 och S3 > 0,01)."
+        } else {
+            "Får byggas och prövas i tävlingen (både S2 > 0,02 och S3 > 0,01; bevisar inte nytta)."
+        }
+    );
+    let _ = writeln!(t, "- **L1-C (osäkerhet):** Kan inte strykas av skuggan — byggs bara med egenvärdesklampning av `P_a` (avsnitt 4) och dess kontrollarm K-d.");
+    let _ = writeln!(
+        t,
+        "- **S4-följd:** {}",
+        if s4_b1_fel {
+            "Negativa q hittades i B1:s egen RLS — lägg till egen arm `LarB1Krit med stabil P_a` mot `LarB1Krit` före tävlingen."
+        } else {
+            "Inga negativa q — egenvärdesklampningen gäller bara under L1-C."
+        }
+    );
+    let _ = writeln!(
+        t,
+        "- **S5-följd:** {}",
+        if s5_drift_over_grans {
+            "Median S5 ≥ 0,05 — pröva rödprovet med felvriden post också med uppmätt drift."
+        } else {
+            "Median S5 < 0,05 — omkodningen av råsinnen behålls för L4, men L1:s minne väntas inte bero på den."
+        }
+    );
+
+    let _ = writeln!(t, "\n## 3. Utfall per frö\n");
+    let _ = writeln!(t, "| Frö | S1 (16–64/≤16) | S1 (>64/≤16) | Angrepp (≤16/16–64/>64) | S2 tot | S2 inom | S2 utan | S3 annat | S4 neg | S4 >100 | S4 min q | S4 mest>minst | S5 full | S5 norm | Pop |");
+    let _ = writeln!(t, "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
+    for r in rader {
+        let _ = writeln!(
+            t,
+            "| {} | {:.4} | {:.4} | {}/{}/{} | {:.4} | {:.4} | {:.4} | {:.4} | {} | {} | {:.5} | {:.4} | {:.4} | {:.4} | {:.0} |",
+            r.fro, r.s1_kvot, r.s1_lang_kvot,
+            r.s1_kort_n, r.s1_mellan_n, r.s1_lang_n,
+            r.s2_tot, r.s2_inom, r.s2_utan,
+            r.s3_andel,
+            r.s4_n_neg, r.s4_n_over100, r.s4_min_q, r.s4_mest_storre_andel,
+            r.s5_full_med, r.s5_bara_norm_med, r.slutpop
+        );
+    }
+
+    (t, dom)
+}
+
+fn kora_skugga2312(
+    fron: &[u64],
+    inkor_ar: i64,
+    mat_ar: i64,
+    tradar: usize,
+    ra_ut: Option<&Path>,
+) -> Result<String, String> {
+    if fron.is_empty() {
+        return Err("inga frön".into());
+    }
+    let t_start = std::time::Instant::now();
+    live_logg_med(
+        EGEN_LOGG_2312,
+        "Alt 2312",
+        &format!(
+            "Startar skuggmätning Steg L1 v2 på {} världar (inkörning {inkor_ar} år, mätning {mat_ar} år, {tradar} trådar)",
+            fron.len()
+        ),
+    );
+    let next_f = AtomicUsize::new(0);
+    let progress = Arc::new((AtomicUsize::new(0), fron.len(), std::time::Instant::now()));
+    let n_tr = tradar.max(1).min(fron.len());
+    let mut rader: Vec<SkuggaUtfall2312> = std::thread::scope(|s| -> Result<Vec<SkuggaUtfall2312>, String> {
+        let hs: Vec<_> = (0..n_tr)
+            .map(|_| {
+                let prog_c = Arc::clone(&progress);
+                let next_ref = &next_f;
+                s.spawn(move || -> Result<Vec<SkuggaUtfall2312>, String> {
+                    let mut out = Vec::new();
+                    loop {
+                        let fi = next_ref.fetch_add(1, Ordering::Relaxed);
+                        if fi >= fron.len() {
+                            break;
+                        }
+                        out.push(kor_skugga2312_ett_fro(fron[fi], inkor_ar, mat_ar, Some(&*prog_c))?);
+                    }
+                    Ok(out)
+                })
+            })
+            .collect();
+        let mut all = Vec::with_capacity(fron.len());
+        for h in hs {
+            all.extend(h.join().map_err(|_| "skuggtråd föll".to_string())??);
+        }
+        Ok(all)
+    })?;
+    rader.sort_by_key(|r| r.fro);
+    let sec = t_start.elapsed().as_secs_f64();
+    if let Some(p) = ra_ut {
+        if let Some(par) = p.parent() {
+            let _ = create_dir_all(par);
+        }
+        let block = BlockSkugga2312Json { inkor_ar, mat_ar, sec, rader: rader.clone() };
+        let j = serde_json::to_string_pretty(&block).map_err(|e| format!("json 2312: {e}"))?;
+        std::fs::write(p, j).map_err(|e| format!("skriv {}: {e}", p.display()))?;
+    }
+    let (t, dom) = formatera_rapport_skugga2312(&rader, inkor_ar, mat_ar, sec);
+    live_logg_med(
+        EGEN_LOGG_2312,
+        "Alt 2312",
+        &format!(
+            "KLAR skugga2312 ({sec:.1}s): L1-A_stryks={} (for_fa_data={}) L1-B_stryks={} S4_b1_fel={} S5_over_grans={}",
+            dom.l1_a_stryks, dom.l1_a_for_fa_data, dom.l1_b_stryks, dom.s4_b1_fel, dom.s5_drift_over_grans
+        ),
+    );
+    Ok(t)
+}
+
+fn slaihops_skugga2312(filer: &[PathBuf]) -> Result<String, String> {
+    if filer.is_empty() {
+        return Err("inga blockfiler angivna med --in".into());
+    }
+    let mut rader: Vec<SkuggaUtfall2312> = Vec::new();
+    let mut inkor_ar = None;
+    let mut mat_ar = None;
+    let mut max_sec = 0.0f64;
+    for f in filer {
+        let s = std::fs::read_to_string(f).map_err(|e| format!("läs {}: {e}", f.display()))?;
+        let b: BlockSkugga2312Json = serde_json::from_str(&s).map_err(|e| format!("tolka {}: {e}", f.display()))?;
+        match inkor_ar {
+            None => inkor_ar = Some(b.inkor_ar),
+            Some(x) if x != b.inkor_ar => return Err(format!("olika inkor_ar: {x} vs {}", b.inkor_ar)),
+            _ => {}
+        }
+        match mat_ar {
+            None => mat_ar = Some(b.mat_ar),
+            Some(x) if x != b.mat_ar => return Err(format!("olika mat_ar: {x} vs {}", b.mat_ar)),
+            _ => {}
+        }
+        if b.sec > max_sec {
+            max_sec = b.sec;
+        }
+        rader.extend(b.rader);
+    }
+    rader.sort_by_key(|r| r.fro);
+    for w in rader.windows(2) {
+        if w[0].fro == w[1].fro {
+            return Err(format!("dubblettfrö {} i blockfilerna", w[0].fro));
+        }
+    }
+    if rader.is_empty() {
+        return Err("inga världar i blockfilerna".into());
+    }
+    let (t, _) = formatera_rapport_skugga2312(&rader, inkor_ar.unwrap(), mat_ar.unwrap(), max_sec);
+    Ok(t)
+}
+
+// ---------------------------------------------------------------- Alt 2341: Steg L1 v2 tävling (12 armar + bekräftelse)
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+struct TavlingUtfall2341 {
+    /// ALLTID lag F:s (märkta) medelandel under sista 10 år (år 40–50).
+    /// I arm 2 (spegel, där varianten står i lag M) beräknar domfunktionen explicit `1.0 - medel_andel_lag_f`!
+    #[serde(with = "opt_nan")]
+    medel_andel_lag_f: f64,
+    #[serde(with = "opt_nan")]
+    slut_andel_lag_f: f64,
+    fodslar_f: u64,
+    fodslar_m: u64,
+    slutpop: f64,
+    utdod: bool,
+    #[serde(with = "opt_nan")]
+    rovdod_vuxen_f: f64,
+    #[serde(with = "opt_nan")]
+    rovdod_vuxen_m: f64,
+    #[serde(with = "opt_nan")]
+    kron_medel_f: f64,
+    #[serde(with = "opt_nan")]
+    kron_medel_m: f64,
+    #[serde(with = "opt_nan")]
+    g_kron_provat: f64,
+    #[serde(with = "opt_nan")]
+    krit_r2_provat: f64,
+    #[serde(with = "opt_nan")]
+    w_skada_provat: f64,
+    #[serde(with = "opt_nan")]
+    w_osak_provat: f64,
+    /// Räknare för `q = xᵀ P_a x` före klampning i drift (ritning v2 avsnitt 4 punkt 1).
+    q_n_anrop: u64,
+    q_n_neg: u64,
+    q_n_over100: u64,
+    #[serde(with = "opt_nan")]
+    q_min: f64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct Block2341Json {
+    inkor_ar: i64,
+    tavling_ar: i64,
+    sec: f64,
+    rader: Vec<(u64, Vec<TavlingUtfall2341>)>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct BlockBekraft2341Json {
+    mask: u8,
+    inkor_ar: i64,
+    tavling_ar: i64,
+    sec: f64,
+    rader: Vec<(u64, Vec<TavlingUtfall2341>)>,
+}
+
+const ARM_NAMN_2341: [&str; 12] = [
+    "L1_Noll",
+    "Variant_vs_B1_A",
+    "Variant_vs_B1_Spegel",
+    "Minne_vs_B1",
+    "Plan2_vs_B1",
+    "Osak_vs_B1",
+    "K_a_Plan2_vs_TvaStegsMal",
+    "K_b_Minne_vs_ExtraUppd",
+    "K_c_Minne_vs_Likformig",
+    "K_d_Osak_vs_StabilPa",
+    "Variant_vs_Stryk",
+    "Variant_vs_Tabell",
+];
+
+const ARM_NAMN_BEKRAFT_2341: [&str; 3] = [
+    "Bekraft_Noll",
+    "Variant_vs_B1_A",
+    "Variant_vs_B1_Spegel",
+];
+
+/// Prövat lags andel: i arm 2 (spegel) står det prövade laget i lag M (`1 - lag_f`), annars i lag F.
+fn provad_andel_2341(u: &TavlingUtfall2341, provat_ar_lag_m: bool) -> f64 {
+    if provat_ar_lag_m {
+        1.0 - u.medel_andel_lag_f
+    } else {
+        u.medel_andel_lag_f
+    }
+}
+
+fn kor_tavling_2341_loop(sim: &mut Sim, provat_ar_lag_m: bool, tavling_ar: i64) -> TavlingUtfall2341 {
+    use hcsim::hjarnal1::OsakQStat;
+    let total_steg = tavling_ar.max(2) * STEG_PER_AR;
+    let fonster_ar = 10.min((tavling_ar / 2).max(1));
+    let fonster_start = total_steg - fonster_ar * STEG_PER_AR;
+
+    let (mut sum_andel_f, mut n_andel) = (0.0f64, 0u64);
+    let (mut bas_fod_m, mut bas_fod_o) = (0u64, 0u64);
+
+    for t in 0..total_steg {
+        if t == fonster_start {
+            bas_fod_m = sim.fodslar_markt;
+            bas_fod_o = sim.fodslar_omarkt;
+            if let Some(ref mut rov) = sim.rovdjur_b1 {
+                rov.nollstall_matare();
+            }
+        }
+        sim.steg();
+        if t >= fonster_start {
+            let (mut nf, mut nm) = (0usize, 0usize);
+            for d in sim.djur.iter().filter(|d| d.lev) {
+                if d.markt {
+                    nf += 1;
+                } else {
+                    nm += 1;
+                }
+            }
+            if nf + nm > 0 {
+                sum_andel_f += nf as f64 / (nf + nm) as f64;
+                n_andel += 1;
+            }
+        }
+    }
+
+    let (mut nf_slut, mut tot_slut) = (0usize, 0usize);
+    let mut q_tot = OsakQStat::default();
+    for d in sim.djur.iter().filter(|d| d.lev) {
+        tot_slut += 1;
+        if d.markt {
+            nf_slut += 1;
+        }
+        if let Some(ref hl) = d.hj_l1 {
+            q_tot.lagg(&hl.q_stat);
+        }
+    }
+    let (gk, kr, ws, wo) = mat_l1_diag(sim, !provat_ar_lag_m);
+    let fod_f = sim.fodslar_markt.saturating_sub(bas_fod_m);
+    let fod_m = sim.fodslar_omarkt.saturating_sub(bas_fod_o);
+
+    let rov = sim.rovdjur_b1.as_ref().unwrap();
+    let arv_f = rov.djursteg_vuxen_markt as f64 / STEG_PER_AR as f64;
+    let arv_m = rov.djursteg_vuxen_omarkt as f64 / STEG_PER_AR as f64;
+
+    TavlingUtfall2341 {
+        medel_andel_lag_f: if n_andel > 0 { sum_andel_f / n_andel as f64 } else { f64::NAN },
+        slut_andel_lag_f: if tot_slut > 0 { nf_slut as f64 / tot_slut as f64 } else { f64::NAN },
+        fodslar_f: fod_f,
+        fodslar_m: fod_m,
+        slutpop: tot_slut as f64,
+        utdod: tot_slut < 10,
+        rovdod_vuxen_f: if arv_f > 0.0 { rov.dod_rovdjur_vuxen_markt as f64 * 1000.0 / arv_f } else { f64::NAN },
+        rovdod_vuxen_m: if arv_m > 0.0 { rov.dod_rovdjur_vuxen_omarkt as f64 * 1000.0 / arv_m } else { f64::NAN },
+        kron_medel_f: if rov.djursteg_markt > 0 { rov.kron_sum_markt / rov.djursteg_markt as f64 } else { f64::NAN },
+        kron_medel_m: if rov.djursteg_omarkt > 0 { rov.kron_sum_omarkt / rov.djursteg_omarkt as f64 } else { f64::NAN },
+        g_kron_provat: gk,
+        krit_r2_provat: kr,
+        w_skada_provat: ws,
+        w_osak_provat: wo,
+        q_n_anrop: q_tot.n_anrop,
+        q_n_neg: q_tot.n_neg,
+        q_n_over100: q_tot.n_over100,
+        q_min: if q_tot.n_anrop > 0 { q_tot.min_q } else { f64::NAN },
+    }
+}
+
+fn sparb2341_en_arm(
+    sim_bas: &Sim,
+    fro: u64,
+    ai: usize,
+    tavling_ar: i64,
+    progress: Option<&(AtomicUsize, usize, std::time::Instant)>,
+) -> TavlingUtfall2341 {
+    use hcsim::hjarnal1::{
+        L1_FULL, L1_K_A_TVASTEGS_MAL, L1_K_B_EXTRA_UPPD, L1_K_C_LIKFORMIG, L1_OSAK, L1_PLAN2,
+        L1_REPLAY, L1_STABIL_PA,
+    };
+    let t0 = std::time::Instant::now();
+    let b1 = Formaga::LarB1Krit(0.20, 40);
+    let stryk = Formaga::StrykB1Krit(0.20, 40);
+    let l1_full = Formaga::LarL1(0.20, 40, L1_FULL);
+    let l1_minne = Formaga::LarL1(0.20, 40, L1_REPLAY);
+    let l1_plan2 = Formaga::LarL1(0.20, 40, L1_PLAN2);
+    let l1_osak = Formaga::LarL1(0.20, 40, L1_OSAK);
+    let ka_ctrl = Formaga::LarL1(0.20, 40, L1_K_A_TVASTEGS_MAL);
+    let kb_ctrl = Formaga::LarL1(0.20, 40, L1_K_B_EXTRA_UPPD);
+    let kc_ctrl = Formaga::LarL1(0.20, 40, L1_REPLAY | L1_K_C_LIKFORMIG);
+    let kd_ctrl = Formaga::LarL1(0.20, 40, L1_STABIL_PA);
+    let arm_namn = ARM_NAMN_2341[ai];
+
+    let (fm_f, fm_m, provat_ar_lag_m) = match ai {
+        0 => (l1_full, l1_full, false),
+        1 => (l1_full, b1, false),
+        2 => (b1, l1_full, true),
+        3 => (l1_minne, b1, false),
+        4 => (l1_plan2, b1, false),
+        5 => (l1_osak, b1, false),
+        6 => (l1_plan2, ka_ctrl, false),
+        7 => (l1_minne, kb_ctrl, false),
+        8 => (l1_minne, kc_ctrl, false),
+        9 => (l1_osak, kd_ctrl, false),
+        10 => (l1_full, stryk, false),
+        11 => (l1_full, Formaga::TabellB1, false),
+        _ => unreachable!(),
+    };
+    let mut sim = sim_bas.clone();
+    sim.parning_inom_linje = false;
+    sim.parningar_totalt = 0;
+    sim.parningar_kors = 0;
+    sim.fodslar_markt = 0;
+    sim.fodslar_omarkt = 0;
+    sim.aktivera_rovdjur_b1(fro, lasta_b1_param(true, false));
+    sim.hjarn_arm = Some(HjarnArm {
+        namn: arm_namn,
+        markta: fm_f,
+        omarkta: fm_m,
+        spegel: provat_ar_lag_m,
+    });
+    sim.markera_halften(fro);
+    let u = kor_tavling_2341_loop(&mut sim, provat_ar_lag_m, tavling_ar);
+    let andel_prov = provad_andel_2341(&u, provat_ar_lag_m);
+
+    let prog_txt = if let Some((klara_a, totalt, t_tot)) = progress {
+        let k = klara_a.fetch_add(1, Ordering::Relaxed) + 1;
+        let ganget = t_tot.elapsed().as_secs_f64();
+        let kvar = if k > 0 && k < *totalt { ganget * (*totalt - k) as f64 / k as f64 } else { 0.0 };
+        format!(" [klara {k}/{totalt}, kört {:.1} min, kvar ~{:.1} min]", ganget / 60.0, kvar / 60.0)
+    } else {
+        String::new()
+    };
+    live_logg_med(
+        EGEN_LOGG_2341,
+        "Alt 2341",
+        &format!(
+            "Frö {fro} {arm_namn} klar ({:.1}s): andel={:.1}% (F={:.1}%) föd={}/{} vuxRov={:.1}/{:.1} wO={:+.2} kR2={:.3} q_neg={}{prog_txt}",
+            t0.elapsed().as_secs_f64(),
+            andel_prov * 100.0,
+            u.medel_andel_lag_f * 100.0,
+            u.fodslar_f,
+            u.fodslar_m,
+            u.rovdod_vuxen_f,
+            u.rovdod_vuxen_m,
+            u.w_osak_provat,
+            u.krit_r2_provat,
+            u.q_n_neg,
+        ),
+    );
+    u
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct DomUrval2341 {
+    k1_k2_pass: bool,
+    kand_a: bool,
+    a_likformig: bool,
+    kand_b: bool,
+    kand_c: bool,
+    arm1_och_arm2_pass: bool,
+    vald_mask: Option<u8>,
+    vald_namn: String,
+    dom_text: String,
+}
+
+/// Exakt domfunktion enligt ritning v2 avsnitt 7 (ett enda mått: det prövade lagets medelandel år 40–50).
+fn bedom_urval_2341(grid: &[&Vec<TavlingUtfall2341>]) -> DomUrval2341 {
+    use hcsim::hjarnal1::{L1_K_C_LIKFORMIG, L1_OSAK, L1_PLAN2, L1_REPLAY};
+    let n = grid.len();
+    let krav = (n * 3).div_ceil(4); // 15 av 20
+
+    let andelar = |ai: usize| -> Vec<f64> {
+        let spegel = ai == 2;
+        grid.iter().map(|r| provad_andel_2341(&r[ai], spegel)).collect()
+    };
+    let vinster = |ai: usize| -> usize {
+        andelar(ai).into_iter().filter(|&x| x.is_finite() && x > 0.50).count()
+    };
+    let med_arm = |ai: usize| -> f64 { median_finita(andelar(ai)) };
+
+    // Punkt 1: Nollkontroll och grundstyrka.
+    let noll_med = med_arm(0);
+    let utdod_tot = grid.iter().filter(|r| r.iter().any(|a| a.utdod)).count();
+    let w_stryk = vinster(10);
+    let med_stryk = med_arm(10);
+    let w_tab = vinster(11);
+    let med_tab = med_arm(11);
+    let gk_med = median_finita(grid.iter().map(|r| r[1].g_kron_provat).collect());
+    let k1_k2_pass = (0.45..=0.55).contains(&noll_med)
+        && utdod_tot == 0
+        && w_stryk >= krav
+        && med_stryk >= 0.60
+        && w_tab >= krav
+        && med_tab >= 0.90
+        && gk_med >= 0.50;
+
+    // Punkt 2 & 3: Kandidatkrav per del.
+    let kand_a = vinster(3) >= krav && vinster(7) >= krav;
+    let a_likformig = kand_a && vinster(8) < krav;
+    let kand_b = vinster(4) >= krav && vinster(6) >= krav;
+    let kand_c = vinster(5) >= krav && vinster(9) >= krav;
+
+    // Arm 1 och Arm 2 (med spegelflipp på lag M i arm 2).
+    let arm1_och_arm2_pass = vinster(1) >= krav && vinster(2) >= krav;
+
+    let mut kand_lista: Vec<(u8, &str, f64)> = Vec::new();
+    if kand_a {
+        let mask_a = if a_likformig { L1_REPLAY | L1_K_C_LIKFORMIG } else { L1_REPLAY };
+        let namn_a = if a_likformig { "L1-A (likformig)" } else { "L1-A (prioriterad)" };
+        kand_lista.push((mask_a, namn_a, med_arm(3)));
+    }
+    if kand_b {
+        kand_lista.push((L1_PLAN2, "L1-B (2-stegsplanering)", med_arm(4)));
+    }
+    if kand_c {
+        kand_lista.push((L1_OSAK, "L1-C (stabil P_a + w_osak)", med_arm(5)));
+    }
+
+    if !k1_k2_pass || kand_lista.is_empty() {
+        return DomUrval2341 {
+            k1_k2_pass,
+            kand_a,
+            a_likformig,
+            kand_b,
+            kand_c,
+            arm1_och_arm2_pass,
+            vald_mask: None,
+            vald_namn: "Ingen (behåll LarB1Krit)".to_string(),
+            dom_text: "INTE VISAT — ingen L1-del klarade urvalet (eller grundkraven föll); behåll LarB1Krit".to_string(),
+        };
+    }
+
+    // Punkt 4: Alla kandidater tillsammans om arm 1 & arm 2 håller; annars den enda kandidat med högst medianandel mot B1.
+    let hel_mask: u8 = kand_lista.iter().fold(0u8, |acc, (m, _, _)| acc | *m);
+    let hel_matchar_arm12 = kand_a && !a_likformig && kand_b && kand_c;
+    let (vald_mask, vald_namn, dom_text) = if kand_lista.len() == 1 {
+        let (m, nm, _) = kand_lista[0];
+        (
+            Some(m),
+            nm.to_string(),
+            format!("KANDIDAT VALD FÖR BEKRÄFTELSE (321–340): {nm} (mask={m})"),
+        )
+    } else if hel_matchar_arm12 && arm1_och_arm2_pass {
+        (
+            Some(hel_mask),
+            "Alla tre kandidater (L1-A+B+C)".to_string(),
+            format!("KANDIDAT VALD FÖR BEKRÄFTELSE (321–340): Alla tre kandidater tillsammans (mask={hel_mask})"),
+        )
+    } else if hel_matchar_arm12 && !arm1_och_arm2_pass {
+        // Alla tre var kandidater men helheten föll på arm 1/2 -> bästa enskilda kandidat (högst median mot B1).
+        let basta = kand_lista
+            .iter()
+            .max_by(|a, b| a.2.total_cmp(&b.2))
+            .unwrap();
+        (
+            Some(basta.0),
+            basta.1.to_string(),
+            format!(
+                "KANDIDAT VALD FÖR BEKRÄFTELSE (321–340): {} (helheten föll på arm 1/2; högst medianandel mot B1, mask={})",
+                basta.1, basta.0
+            ),
+        )
+    } else {
+        // Delmängd av 2+ kandidater (eller L1-A bytte till likformig): pröva kombinationen i arm 1+2 på 261-280 först.
+        let namn_kombo = kand_lista.iter().map(|x| x.1).collect::<Vec<_>>().join(" + ");
+        (
+            Some(hel_mask),
+            namn_kombo.clone(),
+            format!(
+                "DELKOMBINATION ATT PRÖVA I ARM 1+2 PÅ 261–280 FÖRE 321–340: {namn_kombo} (mask={hel_mask})"
+            ),
+        )
+    };
+
+    DomUrval2341 {
+        k1_k2_pass,
+        kand_a,
+        a_likformig,
+        kand_b,
+        kand_c,
+        arm1_och_arm2_pass,
+        vald_mask,
+        vald_namn,
+        dom_text,
+    }
+}
+
+fn formatera_rapport_2341(
+    rader: &[(u64, Vec<TavlingUtfall2341>)],
+    inkor_ar: i64,
+    tavling_ar: i64,
+    sec: f64,
+) -> (String, DomUrval2341) {
+    let grid: Vec<&Vec<TavlingUtfall2341>> = rader.iter().map(|(_, v)| v).collect();
+    let n = grid.len();
+    let krav = (n * 3).div_ceil(4);
+    let dom = bedom_urval_2341(&grid);
+
+    let mut t = String::new();
+    let _ = writeln!(t, "# Alt 2341: Steg L1 version 2 — urvalstävling med 12 armar ({n} världar, inkörning {inkor_ar} år + tävling {tavling_ar} år, {sec:.1}s)\n");
+    let _ = writeln!(t, "Låst utfallsregel: `docs/evolution/alt2341-l1-v2-utfallsregel.md` (avsnitt 7 i `ritning-lecun-steg-l1-v2.md`). Ett enda avgörande mått: det prövade lagets medelandel år 40–50 (median `[95 %-median-bootstrap-KI]`).\n");
+
+    let _ = writeln!(t, "## 1. Utfall över alla 12 armar (sista 10 år)\n");
+    let _ = writeln!(t, "| Nr | Arm | Prövad andel `[95 %-KI]` | > 50 % | Födslar (F/M) | Vuxen rovdöd/1000år (F/M) | `w_osak` | `g_kron` | Krit R² | `q<0` / `q>100` / min `q` |");
+    let _ = writeln!(t, "|---|---|---|---|---|---|---|---|---|---|");
+    for (ai, &namn) in ARM_NAMN_2341.iter().enumerate() {
+        let spegel = ai == 2;
+        let and: Vec<f64> = grid.iter().map(|r| provad_andel_2341(&r[ai], spegel)).collect();
+        let (ma, lo, hi) = bootstrap_median_ci_seed(&and, 23410 + ai as u64);
+        let w = and.iter().filter(|&&x| x.is_finite() && x > 0.50).count();
+        let ff = median_finita(grid.iter().map(|r| r[ai].fodslar_f as f64).collect());
+        let fm = median_finita(grid.iter().map(|r| r[ai].fodslar_m as f64).collect());
+        let rvf = median_finita(grid.iter().map(|r| r[ai].rovdod_vuxen_f).collect());
+        let rvm = median_finita(grid.iter().map(|r| r[ai].rovdod_vuxen_m).collect());
+        let wo = median_finita(grid.iter().map(|r| r[ai].w_osak_provat).collect());
+        let gk = median_finita(grid.iter().map(|r| r[ai].g_kron_provat).collect());
+        let kr = median_finita(grid.iter().map(|r| r[ai].krit_r2_provat).collect());
+        let qn: u64 = grid.iter().map(|r| r[ai].q_n_neg).sum();
+        let qo: u64 = grid.iter().map(|r| r[ai].q_n_over100).sum();
+        let qm = grid
+            .iter()
+            .map(|r| r[ai].q_min)
+            .filter(|x| x.is_finite())
+            .fold(f64::INFINITY, f64::min);
+        let q_str = if qm.is_finite() {
+            format!("{qn} / {qo} / {qm:.5}")
+        } else {
+            format!("{qn} / {qo} / —")
+        };
+        let _ = writeln!(
+            t,
+            "| {ai} | {namn} | {:.1} % `[{:.1}; {:.1}]` | {w}/{n} | {ff:.0} / {fm:.0} | {rvf:.1} / {rvm:.1} | {wo:+.2} | {gk:.3} | {kr:.3} | {q_str} |",
+            ma * 100.0, lo * 100.0, hi * 100.0
+        );
+    }
+
+    let _ = writeln!(t, "\n## 2. Låst urvalsbedömning (krav {krav}/{n})\n");
+    let _ = writeln!(t, "- **Grundkrav (nollkontroll, 0 utdöenden, vs Stryk ≥ 60 %, vs Tabell ≥ 90 %, g_kron ≥ 0,50):** **{}**", if dom.k1_k2_pass { "PASS" } else { "FAIL" });
+    let _ = writeln!(t, "- **Kandidat L1-A (arm 3 och K-b arm 7 ≥ {krav}/{n}):** **{}**{}", if dom.kand_a { "KANDIDAT" } else { "EJ KANDIDAT" }, if dom.a_likformig { " (likformig återspelning eftersom K-c < krav)" } else { "" });
+    let _ = writeln!(t, "- **Kandidat L1-B (arm 4 och K-a arm 6 ≥ {krav}/{n}):** **{}**", if dom.kand_b { "KANDIDAT" } else { "EJ KANDIDAT" });
+    let _ = writeln!(t, "- **Kandidat L1-C (arm 5 och K-d arm 9 ≥ {krav}/{n}):** **{}**", if dom.kand_c { "KANDIDAT" } else { "EJ KANDIDAT" });
+    let _ = writeln!(t, "- **Helhet arm 1 & arm 2 (≥ {krav}/{n} i båda):** **{}**", if dom.arm1_och_arm2_pass { "PASS" } else { "FAIL" });
+    let _ = writeln!(t, "- **Vald variant:** `{}`", dom.vald_namn);
+    let _ = writeln!(t, "- **Låst urvalsdom:** **{}**", dom.dom_text);
+    (t, dom)
+}
+
+fn kora_sparb2341(
+    fron: &[u64],
+    inkor_ar: i64,
+    tavling_ar: i64,
+    tradar: usize,
+    ra_ut: Option<&Path>,
+) -> Result<String, String> {
+    if fron.is_empty() {
+        return Err("inga frön".into());
+    }
+    let t_start = std::time::Instant::now();
+    live_logg_med(
+        EGEN_LOGG_2341,
+        "Alt 2341",
+        &format!(
+            "Startar Alt 2341 (Steg L1 v2: 12 parade armar) på {} världar (inkörning {inkor_ar} år, tävling {tavling_ar} år, {tradar} trådar)",
+            fron.len()
+        ),
+    );
+    let next_f = AtomicUsize::new(0);
+    let n_tr = tradar.max(1).min(fron.len());
+    let mut bas_par: Vec<(u64, Sim)> = std::thread::scope(|s| -> Result<Vec<(u64, Sim)>, String> {
+        let hs: Vec<_> = (0..n_tr)
+            .map(|_| {
+                let next_ref = &next_f;
+                s.spawn(move || -> Result<Vec<(u64, Sim)>, String> {
+                    let mut out = Vec::new();
+                    loop {
+                        let fi = next_ref.fetch_add(1, Ordering::Relaxed);
+                        if fi >= fron.len() {
+                            break;
+                        }
+                        let fro = fron[fi];
+                        let t0 = std::time::Instant::now();
+                        let mut sim = bygg_varld_2238(fro)?;
+                        for _ in 0..inkor_ar * STEG_PER_AR {
+                            sim.steg();
+                        }
+                        live_logg_med(
+                            EGEN_LOGG_2341,
+                            "Alt 2341",
+                            &format!("Inkörning frö {fro} klar ({} djur, {:.1}s)", sim.antal(), t0.elapsed().as_secs_f64()),
+                        );
+                        out.push((fro, sim));
+                    }
+                    Ok(out)
+                })
+            })
+            .collect();
+        let mut all = Vec::with_capacity(fron.len());
+        for h in hs {
+            all.extend(h.join().map_err(|_| "inkörningstråd föll".to_string())??);
+        }
+        Ok(all)
+    })?;
+    bas_par.sort_by_key(|x| x.0);
+    let bas_arc = Arc::new(bas_par);
+
+    const N_ARM: usize = 12;
+    let mut jobb: Vec<(usize, usize)> = Vec::with_capacity(fron.len() * N_ARM);
+    for &ai in &[1usize, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11] {
+        for fi in 0..bas_arc.len() {
+            jobb.push((fi, ai));
+        }
+    }
+    let next_j = AtomicUsize::new(0);
+    let progress = Arc::new((AtomicUsize::new(0), jobb.len(), std::time::Instant::now()));
+    let mut grid = vec![vec![TavlingUtfall2341::default(); N_ARM]; bas_arc.len()];
+    let grid_mtx = Mutex::new(&mut grid);
+    let n_jw = tradar.max(1).min(jobb.len());
+    std::thread::scope(|s| {
+        for _ in 0..n_jw {
+            let bas_c = Arc::clone(&bas_arc);
+            let prog_c = Arc::clone(&progress);
+            let jobb_ref = &jobb;
+            let next_ref = &next_j;
+            let mtx_ref = &grid_mtx;
+            s.spawn(move || loop {
+                let ji = next_ref.fetch_add(1, Ordering::Relaxed);
+                if ji >= jobb_ref.len() {
+                    break;
+                }
+                let (fi, ai) = jobb_ref[ji];
+                let (fro, ref sim_bas) = bas_c[fi];
+                let u = sparb2341_en_arm(sim_bas, fro, ai, tavling_ar, Some(&*prog_c));
+                mtx_ref.lock().unwrap()[fi][ai] = u;
+            });
+        }
+    });
+
+    let sec = t_start.elapsed().as_secs_f64();
+    let rader: Vec<(u64, Vec<TavlingUtfall2341>)> = bas_arc
+        .iter()
+        .zip(grid.into_iter())
+        .map(|((fro, _), rad)| (*fro, rad))
+        .collect();
+    if let Some(p) = ra_ut {
+        if let Some(par) = p.parent() {
+            let _ = create_dir_all(par);
+        }
+        let block = Block2341Json { inkor_ar, tavling_ar, sec, rader: rader.clone() };
+        let j = serde_json::to_string_pretty(&block).map_err(|e| format!("json 2341: {e}"))?;
+        std::fs::write(p, j).map_err(|e| format!("skriv {}: {e}", p.display()))?;
+    }
+    let (t, dom) = formatera_rapport_2341(&rader, inkor_ar, tavling_ar, sec);
+    live_logg_med(EGEN_LOGG_2341, "Alt 2341", &format!("KLAR sparb2341 ({sec:.1}s): {}", dom.dom_text));
+    Ok(t)
+}
+
+fn slaihops_2341(filer: &[PathBuf]) -> Result<String, String> {
+    if filer.is_empty() {
+        return Err("inga blockfiler angivna med --in".into());
+    }
+    let mut rader: Vec<(u64, Vec<TavlingUtfall2341>)> = Vec::new();
+    let mut inkor_ar = None;
+    let mut tavling_ar = None;
+    let mut max_sec = 0.0f64;
+    for f in filer {
+        let s = std::fs::read_to_string(f).map_err(|e| format!("läs {}: {e}", f.display()))?;
+        let b: Block2341Json = serde_json::from_str(&s).map_err(|e| format!("tolka {}: {e}", f.display()))?;
+        match inkor_ar {
+            None => inkor_ar = Some(b.inkor_ar),
+            Some(x) if x != b.inkor_ar => return Err(format!("olika inkor_ar: {x} vs {}", b.inkor_ar)),
+            _ => {}
+        }
+        match tavling_ar {
+            None => tavling_ar = Some(b.tavling_ar),
+            Some(x) if x != b.tavling_ar => return Err(format!("olika tavling_ar: {x} vs {}", b.tavling_ar)),
+            _ => {}
+        }
+        if b.sec > max_sec {
+            max_sec = b.sec;
+        }
+        rader.extend(b.rader);
+    }
+    rader.sort_by_key(|(fro, _)| *fro);
+    for w in rader.windows(2) {
+        if w[0].0 == w[1].0 {
+            return Err(format!("dubblettfrö {} i blockfilerna", w[0].0));
+        }
+    }
+    if rader.is_empty() {
+        return Err("inga världar i blockfilerna".into());
+    }
+    let (t, _) = formatera_rapport_2341(&rader, inkor_ar.unwrap(), tavling_ar.unwrap(), max_sec);
+    Ok(t)
+}
+
+fn bedom_bekraft_2341(grid: &[&Vec<TavlingUtfall2341>]) -> (bool, String) {
+    let n = grid.len();
+    let krav = (n * 3).div_ceil(4);
+    let noll_med = median_finita(grid.iter().map(|r| r[0].medel_andel_lag_f).collect());
+    let utdod_tot = grid.iter().filter(|r| r.iter().any(|a| a.utdod)).count();
+    let noll_ok = (0.45..=0.55).contains(&noll_med) && utdod_tot == 0;
+    let w1 = grid.iter().filter(|r| provad_andel_2341(&r[1], false) > 0.50).count();
+    let w2 = grid.iter().filter(|r| provad_andel_2341(&r[2], true) > 0.50).count();
+    let godkand = noll_ok && w1 >= krav && w2 >= krav;
+    let txt = if godkand {
+        format!("BEKRÄFTAT GRÖNT — arm 1 ({w1}/{n}) och arm 2 ({w2}/{n}) båda ≥ {krav}/{n}, nollkontroll OK ({:.1} %)", noll_med * 100.0)
+    } else {
+        format!("INTE VISAT — arm 1 ({w1}/{n}), arm 2 ({w2}/{n}), nollkontroll={} ({:.1} %, utdöenden {utdod_tot}/{n}); behåll LarB1Krit", if noll_ok { "OK" } else { "FAIL" }, noll_med * 100.0)
+    };
+    (godkand, txt)
+}
+
+fn formatera_rapport_bekraft_2341(
+    rader: &[(u64, Vec<TavlingUtfall2341>)],
+    mask: u8,
+    inkor_ar: i64,
+    tavling_ar: i64,
+    sec: f64,
+) -> (String, bool) {
+    let grid: Vec<&Vec<TavlingUtfall2341>> = rader.iter().map(|(_, v)| v).collect();
+    let n = grid.len();
+    let (ok, dom_txt) = bedom_bekraft_2341(&grid);
+    let mut t = String::new();
+    let _ = writeln!(t, "# Alt 2341: Bekräftelse Steg L1 v2 (mask={mask}, {n} världar, inkörning {inkor_ar} år + tävling {tavling_ar} år, {sec:.1}s)\n");
+    let _ = writeln!(t, "| Nr | Arm | Prövad andel `[95 %-KI]` | > 50 % | Födslar (F/M) | `q<0` / `q>100` / min `q` |");
+    let _ = writeln!(t, "|---|---|---|---|---|---|");
+    for (ai, &namn) in ARM_NAMN_BEKRAFT_2341.iter().enumerate() {
+        let spegel = ai == 2;
+        let and: Vec<f64> = grid.iter().map(|r| provad_andel_2341(&r[ai], spegel)).collect();
+        let (ma, lo, hi) = bootstrap_median_ci_seed(&and, 23490 + ai as u64);
+        let w = and.iter().filter(|&&x| x.is_finite() && x > 0.50).count();
+        let ff = median_finita(grid.iter().map(|r| r[ai].fodslar_f as f64).collect());
+        let fm = median_finita(grid.iter().map(|r| r[ai].fodslar_m as f64).collect());
+        let qn: u64 = grid.iter().map(|r| r[ai].q_n_neg).sum();
+        let qo: u64 = grid.iter().map(|r| r[ai].q_n_over100).sum();
+        let qm = grid.iter().map(|r| r[ai].q_min).filter(|x| x.is_finite()).fold(f64::INFINITY, f64::min);
+        let q_str = if qm.is_finite() { format!("{qn} / {qo} / {qm:.5}") } else { format!("{qn} / {qo} / —") };
+        let _ = writeln!(t, "| {ai} | {namn} | {:.1} % `[{:.1}; {:.1}]` | {w}/{n} | {ff:.0} / {fm:.0} | {q_str} |", ma * 100.0, lo * 100.0, hi * 100.0);
+    }
+    let _ = writeln!(t, "\n- **Låst bekräftelsedom:** **{dom_txt}**");
+    (t, ok)
+}
+
+fn kora_bekraft2341(
+    fron: &[u64],
+    mask: u8,
+    inkor_ar: i64,
+    tavling_ar: i64,
+    tradar: usize,
+    ra_ut: Option<&Path>,
+) -> Result<String, String> {
+    if fron.is_empty() {
+        return Err("inga frön".into());
+    }
+    let t_start = std::time::Instant::now();
+    let next_f = AtomicUsize::new(0);
+    let n_tr = tradar.max(1).min(fron.len());
+    let mut bas_par: Vec<(u64, Sim)> = std::thread::scope(|s| -> Result<Vec<(u64, Sim)>, String> {
+        let hs: Vec<_> = (0..n_tr)
+            .map(|_| {
+                let next_ref = &next_f;
+                s.spawn(move || -> Result<Vec<(u64, Sim)>, String> {
+                    let mut out = Vec::new();
+                    loop {
+                        let fi = next_ref.fetch_add(1, Ordering::Relaxed);
+                        if fi >= fron.len() {
+                            break;
+                        }
+                        let fro = fron[fi];
+                        let mut sim = bygg_varld_2238(fro)?;
+                        for _ in 0..inkor_ar * STEG_PER_AR {
+                            sim.steg();
+                        }
+                        out.push((fro, sim));
+                    }
+                    Ok(out)
+                })
+            })
+            .collect();
+        let mut all = Vec::with_capacity(fron.len());
+        for h in hs {
+            all.extend(h.join().map_err(|_| "inkörningstråd föll".to_string())??);
+        }
+        Ok(all)
+    })?;
+    bas_par.sort_by_key(|x| x.0);
+    let bas_arc = Arc::new(bas_par);
+
+    const N_ARM: usize = 3;
+    let mut jobb: Vec<(usize, usize)> = Vec::with_capacity(fron.len() * N_ARM);
+    for ai in 0..N_ARM {
+        for fi in 0..bas_arc.len() {
+            jobb.push((fi, ai));
+        }
+    }
+    let next_j = AtomicUsize::new(0);
+    let mut grid = vec![vec![TavlingUtfall2341::default(); N_ARM]; bas_arc.len()];
+    let grid_mtx = Mutex::new(&mut grid);
+    let n_jw = tradar.max(1).min(jobb.len());
+    std::thread::scope(|s| {
+        for _ in 0..n_jw {
+            let bas_c = Arc::clone(&bas_arc);
+            let jobb_ref = &jobb;
+            let next_ref = &next_j;
+            let mtx_ref = &grid_mtx;
+            s.spawn(move || loop {
+                let ji = next_ref.fetch_add(1, Ordering::Relaxed);
+                if ji >= jobb_ref.len() {
+                    break;
+                }
+                let (fi, ai) = jobb_ref[ji];
+                let (fro, ref sim_bas) = bas_c[fi];
+                let b1 = Formaga::LarB1Krit(0.20, 40);
+                let var = Formaga::LarL1(0.20, 40, mask);
+                let (fm_f, fm_m, provat_ar_lag_m) = match ai {
+                    0 => (var, var, false),
+                    1 => (var, b1, false),
+                    2 => (b1, var, true),
+                    _ => unreachable!(),
+                };
+                let mut sim = sim_bas.clone();
+                sim.parning_inom_linje = false;
+                sim.aktivera_rovdjur_b1(fro, lasta_b1_param(true, false));
+                sim.hjarn_arm = Some(HjarnArm {
+                    namn: ARM_NAMN_BEKRAFT_2341[ai],
+                    markta: fm_f,
+                    omarkta: fm_m,
+                    spegel: provat_ar_lag_m,
+                });
+                sim.markera_halften(fro);
+                let u = kor_tavling_2341_loop(&mut sim, provat_ar_lag_m, tavling_ar);
+                mtx_ref.lock().unwrap()[fi][ai] = u;
+            });
+        }
+    });
+    let sec = t_start.elapsed().as_secs_f64();
+    let rader: Vec<(u64, Vec<TavlingUtfall2341>)> = bas_arc
+        .iter()
+        .zip(grid.into_iter())
+        .map(|((fro, _), rad)| (*fro, rad))
+        .collect();
+    if let Some(p) = ra_ut {
+        if let Some(par) = p.parent() {
+            let _ = create_dir_all(par);
+        }
+        let block = BlockBekraft2341Json { mask, inkor_ar, tavling_ar, sec, rader: rader.clone() };
+        let j = serde_json::to_string_pretty(&block).map_err(|e| format!("json bekraft2341: {e}"))?;
+        std::fs::write(p, j).map_err(|e| format!("skriv {}: {e}", p.display()))?;
+    }
+    let (t, _) = formatera_rapport_bekraft_2341(&rader, mask, inkor_ar, tavling_ar, sec);
+    Ok(t)
+}
+
+fn slaihops_bekraft2341(filer: &[PathBuf]) -> Result<String, String> {
+    if filer.is_empty() {
+        return Err("inga blockfiler angivna med --in".into());
+    }
+    let mut rader: Vec<(u64, Vec<TavlingUtfall2341>)> = Vec::new();
+    let mut mask = None;
+    let mut inkor_ar = None;
+    let mut tavling_ar = None;
+    let mut max_sec = 0.0f64;
+    for f in filer {
+        let s = std::fs::read_to_string(f).map_err(|e| format!("läs {}: {e}", f.display()))?;
+        let b: BlockBekraft2341Json = serde_json::from_str(&s).map_err(|e| format!("tolka {}: {e}", f.display()))?;
+        match mask {
+            None => mask = Some(b.mask),
+            Some(x) if x != b.mask => return Err(format!("olika mask: {x} vs {}", b.mask)),
+            _ => {}
+        }
+        match inkor_ar {
+            None => inkor_ar = Some(b.inkor_ar),
+            Some(x) if x != b.inkor_ar => return Err(format!("olika inkor_ar: {x} vs {}", b.inkor_ar)),
+            _ => {}
+        }
+        match tavling_ar {
+            None => tavling_ar = Some(b.tavling_ar),
+            Some(x) if x != b.tavling_ar => return Err(format!("olika tavling_ar: {x} vs {}", b.tavling_ar)),
+            _ => {}
+        }
+        if b.sec > max_sec {
+            max_sec = b.sec;
+        }
+        rader.extend(b.rader);
+    }
+    rader.sort_by_key(|(fro, _)| *fro);
+    for w in rader.windows(2) {
+        if w[0].0 == w[1].0 {
+            return Err(format!("dubblettfrö {} i blockfilerna", w[0].0));
+        }
+    }
+    if rader.is_empty() {
+        return Err("inga världar i blockfilerna".into());
+    }
+    let (t, _) = formatera_rapport_bekraft_2341(&rader, mask.unwrap(), inkor_ar.unwrap(), tavling_ar.unwrap(), max_sec);
+    Ok(t)
+}
+
 #[cfg(test)]
 mod prov {
     use super::*;
@@ -8888,6 +10305,229 @@ mod prov {
         let ihop = slaihops_2323(&[f2.clone(), f1.clone()]).unwrap();
         assert_eq!(ihop, hel_g, "sammanslagen Alt 2323-rapport måste vara bitvis identisk med hel körning");
         assert!(slaihops_2323(&[f1.clone(), f1.clone()]).is_err(), "dubblettfrö måste avvisas");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn skugga2312_rodprov_egen_rng_och_bitlikhet_ett_ar() {
+        // Ritning v2 avsnitt 2:
+        // 1) En skugga som drar ett tal ur egen_rng per val ger annan befolkning efter 1 år på 1 frö.
+        // 2) Den riktiga skuggan ger exakt samma kontrollsumma över alla djurs lägen och energi som LarB1Krit.
+        use hcsim::hjarnal1::SkuggaL1Ack;
+        let fro = 341u64;
+        let sim_bas = bygg_varld_2238(fro).expect("bygg värld 341");
+
+        let kor_ett_ar = |arm: Formaga, skugga: Option<SkuggaL1Ack>| -> (u64, Option<SkuggaL1Ack>) {
+            let mut sim = sim_bas.clone();
+            sim.parning_inom_linje = false;
+            sim.aktivera_rovdjur_b1(fro, lasta_b1_param(true, false));
+            sim.hjarn_arm = Some(HjarnArm {
+                namn: "SkuggaProv",
+                markta: arm,
+                omarkta: arm,
+                spegel: false,
+            });
+            sim.markera_halften(fro);
+            sim.skugga_l1 = skugga;
+            for _ in 0..STEG_PER_AR {
+                sim.steg();
+            }
+            (kontrollsumma_djur(&sim), sim.skugga_l1.take())
+        };
+
+        let (sum_b1, _) = kor_ett_ar(Formaga::LarB1Krit(0.20, 40), None);
+        let (sum_skugga, ack_ok) = kor_ett_ar(Formaga::LarL1(0.20, 40, 0), Some(SkuggaL1Ack::ny(true)));
+        let mut trasig = SkuggaL1Ack::ny(true);
+        trasig.trasig_rng_lacka_for_prov = true;
+        let (sum_trasig, _) = kor_ett_ar(Formaga::LarL1(0.20, 40, 0), Some(trasig));
+
+        assert_ne!(
+            sum_trasig, sum_b1,
+            "rödprov: skugga som drar ur egen_rng måste ge annan befolkning än LarB1Krit efter 1 år"
+        );
+        assert_eq!(
+            sum_skugga, sum_b1,
+            "grönprov: riktig skugga måste ge exakt samma kontrollsumma som LarB1Krit efter 1 år"
+        );
+        let ack = ack_ok.unwrap();
+        assert!(ack.s2_tot_n > 0 && ack.s3_totalt > 0 && ack.s4_q.n_anrop > 0 && ack.s5_full.n > 0);
+    }
+
+    #[test]
+    fn skugga2312_block_sammanslagning_och_strykregler() {
+        let gor = |fro: u64, s1: f64, s2: f64, s3: f64, neg: u64, s5: f64| SkuggaUtfall2312 {
+            fro,
+            s1_kvot: s1,
+            s1_lang_kvot: s1 + 0.1,
+            s1_kort_n: 500,
+            s1_mellan_n: 500,
+            s1_lang_n: 500,
+            s2_tot: s2,
+            s2_inom: s2 + 0.02,
+            s2_utan: s2 - 0.02,
+            s2_tot_n: 10_000,
+            s2_inom_n: 6_000,
+            s2_utan_n: 4_000,
+            s3_andel: s3,
+            s3_annat: 200,
+            s3_totalt: 10_000,
+            s4_n_anrop: 90_000,
+            s4_n_neg: neg,
+            s4_n_over100: 0,
+            s4_min_q: if neg > 0 { -0.01 } else { 0.001 },
+            s4_mest_storre_andel: 0.15,
+            s4_mest_storre_u: 1_500,
+            s4_val_totalt: 10_000,
+            s5_full_med: s5,
+            s5_bara_norm_med: s5 * 0.6,
+            s5_n: 10_000,
+            slutpop: 12_000.0,
+            utdod: false,
+            krit_r2: 0.18,
+            g_kron: 1.0,
+        };
+
+        let behall = vec![
+            gor(341, 1.25, 0.08, 0.05, 0, 0.08),
+            gor(342, 1.22, 0.07, 0.04, 0, 0.07),
+            gor(343, 1.30, 0.09, 0.06, 0, 0.09),
+            gor(344, 1.18, 0.06, 0.03, 0, 0.06),
+        ];
+        let (hel, dom_b) = formatera_rapport_skugga2312(&behall, 10, 20, 15.0);
+        assert!(!dom_b.l1_a_stryks && !dom_b.l1_a_for_fa_data && !dom_b.l1_b_stryks && !dom_b.s4_b1_fel && dom_b.s5_drift_over_grans);
+
+        // Röd kontroll: gränsvärdena stryker delarna (S1 <= 1.10, S2 <= 0.02 eller S3 <= 0.01, S4 >= 1 frö med q < 0, S5 < 0.05).
+        let stryk = vec![
+            gor(341, 1.10, 0.02, 0.05, 1, 0.04),
+            gor(342, 1.08, 0.01, 0.05, 0, 0.03),
+            gor(343, 1.05, 0.02, 0.01, 0, 0.04),
+            gor(344, 1.09, 0.015, 0.005, 0, 0.03),
+        ];
+        let (_, dom_s) = formatera_rapport_skugga2312(&stryk, 10, 20, 15.0);
+        assert!(dom_s.l1_a_stryks && dom_s.l1_b_stryks && dom_s.s4_b1_fel && !dom_s.s5_drift_over_grans);
+
+        // Block-JSON sammanslagning bit för bit + dubblettspärr.
+        let dir = std::env::temp_dir().join("alt2312_skugga_merge_prov");
+        let _ = std::fs::create_dir_all(&dir);
+        let f1 = dir.join("b1.json");
+        let f2 = dir.join("b2.json");
+        let b1 = BlockSkugga2312Json { inkor_ar: 10, mat_ar: 20, sec: 12.0, rader: vec![behall[2].clone(), behall[0].clone()] };
+        let b2 = BlockSkugga2312Json { inkor_ar: 10, mat_ar: 20, sec: 15.0, rader: vec![behall[3].clone(), behall[1].clone()] };
+        std::fs::write(&f1, serde_json::to_string(&b1).unwrap()).unwrap();
+        std::fs::write(&f2, serde_json::to_string(&b2).unwrap()).unwrap();
+        let ihop = slaihops_skugga2312(&[f2.clone(), f1.clone()]).unwrap();
+        assert_eq!(ihop, hel, "sammanslagen skuggrapport måste vara bitvis identisk med hel körning");
+        assert!(slaihops_skugga2312(&[f1.clone(), f1.clone()]).is_err(), "dubblettfrö måste avvisas");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn alt2341_dom_rodprov_noll_och_spegel_samt_block_sammanslagning() {
+        // Ritning v2 avsnitt 7:
+        // Rödprov 1: L1_Noll insatt på arm 1:s och arm 2:s plats ska ge "INTE VISAT" i båda.
+        // Rödprov 2: Påhittad variant med 60 % för lag F i arm 1 och 40 % för lag F i arm 2 (= 60 % för varianten i lag M)
+        //            ska godkännas i arm 1 och 2; 60 % för lag F i arm 2 (= 40 % för varianten) ska underkännas.
+        let gor_arm = |andel_f: f64| TavlingUtfall2341 {
+            medel_andel_lag_f: andel_f,
+            slut_andel_lag_f: andel_f,
+            fodslar_f: 8000,
+            fodslar_m: 7000,
+            slutpop: 14000.0,
+            utdod: false,
+            rovdod_vuxen_f: 85.0,
+            rovdod_vuxen_m: 88.0,
+            kron_medel_f: 0.50,
+            kron_medel_m: 0.49,
+            g_kron_provat: 1.0,
+            krit_r2_provat: 0.15,
+            w_skada_provat: 0.5,
+            w_osak_provat: 0.1,
+            q_n_anrop: 1000,
+            q_n_neg: 0,
+            q_n_over100: 0,
+            q_min: 0.01,
+        };
+        let gor_rad = |fro: u64, andelar_f: [f64; 12]| -> (u64, Vec<TavlingUtfall2341>) {
+            (fro, andelar_f.into_iter().map(gor_arm).collect())
+        };
+
+        // 1. Rödprov: L1_Noll (0.49, 0.51, 0.48, 0.52) insatt på arm 1 och arm 2 (plus neutrala delarmar) -> INTE VISAT!
+        let noll_seq = [0.49, 0.51, 0.48, 0.52];
+        let noll_rader: Vec<_> = (0..4)
+            .map(|k| {
+                let nv = noll_seq[k];
+                gor_rad(
+                    261 + k as u64,
+                    [nv, nv, nv, nv, nv, nv, nv, nv, nv, nv, 0.68, 0.99],
+                )
+            })
+            .collect();
+        let (_, dom_noll) = formatera_rapport_2341(&noll_rader, 10, 50, 10.0);
+        assert!(dom_noll.dom_text.starts_with("INTE VISAT"), "nollkontroll på arm 1+2 måste ge INTE VISAT, fick {}", dom_noll.dom_text);
+        assert!(!dom_noll.arm1_och_arm2_pass);
+        assert!(dom_noll.vald_mask.is_none());
+
+        // Även i bekräftelsedomen på 321-340 ska noll-tal ge INTE VISAT.
+        let noll_bek: Vec<Vec<TavlingUtfall2341>> = noll_seq
+            .iter()
+            .map(|&nv| vec![gor_arm(nv), gor_arm(nv), gor_arm(nv)])
+            .collect();
+        let noll_bek_refs: Vec<&Vec<TavlingUtfall2341>> = noll_bek.iter().collect();
+        let (ok_noll, txt_noll) = bedom_bekraft_2341(&noll_bek_refs);
+        assert!(!ok_noll && txt_noll.starts_with("INTE VISAT"));
+
+        // 2. Röd-/grönprov på spegelvändningen (arm 1 = 0.60 för lag F, arm 2 = 0.40 för lag F -> 0.60 för varianten i lag M!).
+        let vinn_rader: Vec<_> = (0..4)
+            .map(|k| {
+                gor_rad(
+                    261 + k as u64,
+                    [0.50, 0.60, 0.40, 0.56, 0.55, 0.54, 0.54, 0.55, 0.54, 0.53, 0.68, 0.99],
+                )
+            })
+            .collect();
+        let (hel_md, dom_vinn) = formatera_rapport_2341(&vinn_rader, 10, 50, 12.0);
+        assert!(dom_vinn.arm1_och_arm2_pass, "arm 1=0.60(F) och arm 2=0.40(F)=0.60(M) måste passera");
+        assert_eq!(dom_vinn.vald_mask, Some(hcsim::hjarnal1::L1_FULL));
+
+        // Röd kontroll på spegel: arm 2 = 0.60 för lag F betyder 0.40 för varianten -> arm 1+2 MÅSTE FALLA!
+        let spegel_fel: Vec<_> = (0..4)
+            .map(|k| {
+                gor_rad(
+                    261 + k as u64,
+                    [0.50, 0.60, 0.60, 0.56, 0.55, 0.54, 0.54, 0.55, 0.54, 0.53, 0.68, 0.99],
+                )
+            })
+            .collect();
+        let (_, dom_sf) = formatera_rapport_2341(&spegel_fel, 10, 50, 12.0);
+        assert!(!dom_sf.arm1_och_arm2_pass, "arm 2=0.60(F)=0.40(M) måste falla i spegeln");
+        // Faller helheten på arm 1/2 väljs enskilda kandidaten med högst medianandel mot B1 (L1-A = 0.56).
+        assert_eq!(dom_sf.vald_mask, Some(hcsim::hjarnal1::L1_REPLAY));
+
+        // 3. Om L1-A inte slår K-c (arm 8 < 15/20) byter L1-A till likformig återspelning.
+        let kc_fail: Vec<_> = (0..4)
+            .map(|k| {
+                gor_rad(
+                    261 + k as u64,
+                    [0.50, 0.55, 0.45, 0.56, 0.49, 0.49, 0.49, 0.55, 0.49, 0.49, 0.68, 0.99],
+                )
+            })
+            .collect();
+        let (_, dom_kc) = formatera_rapport_2341(&kc_fail, 10, 50, 12.0);
+        assert!(dom_kc.kand_a && dom_kc.a_likformig);
+        assert_eq!(dom_kc.vald_mask, Some(hcsim::hjarnal1::L1_REPLAY | hcsim::hjarnal1::L1_K_C_LIKFORMIG));
+
+        // 4. Block-JSON sammanslagning bit för bit + dubblettspärr.
+        let dir = std::env::temp_dir().join("alt2341_merge_prov");
+        let _ = std::fs::create_dir_all(&dir);
+        let f1 = dir.join("b1.json");
+        let f2 = dir.join("b2.json");
+        let b1 = Block2341Json { inkor_ar: 10, tavling_ar: 50, sec: 10.0, rader: vec![vinn_rader[2].clone(), vinn_rader[0].clone()] };
+        let b2 = Block2341Json { inkor_ar: 10, tavling_ar: 50, sec: 12.0, rader: vec![vinn_rader[3].clone(), vinn_rader[1].clone()] };
+        std::fs::write(&f1, serde_json::to_string(&b1).unwrap()).unwrap();
+        std::fs::write(&f2, serde_json::to_string(&b2).unwrap()).unwrap();
+        let ihop = slaihops_2341(&[f2.clone(), f1.clone()]).unwrap();
+        assert_eq!(ihop, hel_md, "sammanslagen Alt 2341-rapport måste vara bitvis identisk med hel körning");
+        assert!(slaihops_2341(&[f1.clone(), f1.clone()]).is_err(), "dubblettfrö måste avvisas");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
