@@ -1013,6 +1013,11 @@ pub struct Sim {
     /// Läsbar gendiagnostik (Alt 2258): antal födslar där `far.markt != mor.markt`.
     #[serde(skip)]
     pub parningar_kors: u64,
+    /// Läsbar födselräknare per linje (Alt 2270): ändrar aldrig simuleringen.
+    #[serde(skip)]
+    pub fodslar_markt: u64,
+    #[serde(skip)]
+    pub fodslar_omarkt: u64,
 }
 
 impl Sim {
@@ -1151,6 +1156,8 @@ impl Sim {
             parning_inom_linje: false,
             parningar_totalt: 0,
             parningar_kors: 0,
+            fodslar_markt: 0,
+            fodslar_omarkt: 0,
         }
     }
 
@@ -2770,6 +2777,11 @@ impl Sim {
             }
             self.rak.fodda += 1;
             self.rak.fodda_ar += 1;
+            if markt {
+                self.fodslar_markt += 1;
+            } else {
+                self.fodslar_omarkt += 1;
+            }
             if self.bokforing.pa && self.markering_skedd {
                 self.bokforing.lagg_fodsel(formaga_unge);
             }
