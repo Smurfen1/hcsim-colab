@@ -11,7 +11,6 @@ use crate::formaga::{Formaga, HjarnArm, Intagslasare, Minnestabell, EPS_ARV_XOR,
 use crate::hjarna::{self, gauss, lott_bland_max, Hj};
 use crate::hjarna2008::Hj2008;
 use crate::hjarnab1::{GenB1, HjB1, S_B1};
-use crate::hjarnal2::{GenL2, HjL2, KroppL2, MODE1_KOST_FAKTOR};
 use crate::klimat::Klimat;
 use crate::rng::Rng;
 use crate::tal::{self, vmax_ruta, A_N, SIGMA_MUT};
@@ -137,11 +136,6 @@ pub struct Dino {
     pub senaste_r_b1: Option<f64>,
     #[serde(skip)]
     pub forra_kron_grann_medel: f64,
-    /// Alt 2348 (Steg L2): biologisk inställare (delade kritiker + Mode-2 → Mode-1).
-    #[serde(skip)]
-    pub hj_l2: Option<Box<HjL2>>,
-    #[serde(skip)]
-    pub gen_l2: Option<GenL2>,
 }
 
 fn default_eps() -> f64 {
@@ -1212,8 +1206,6 @@ impl Sim {
                     senaste_skada: 0.0,
                     senaste_r_b1: None,
                     forra_kron_grann_medel: 0.0,
-                    hj_l2: None,
-                    gen_l2: None,
                 });
                 nasta_uid += 1;
             }
@@ -1341,15 +1333,10 @@ impl Sim {
                 let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                 d.gen_b1 = Some(GenB1::slump(&mut gg));
             }
-            if d.gen_l2.is_none() {
-                let mut gg2 = Rng::new(d.uid ^ 0x2348_1A17_0001);
-                d.gen_l2 = Some(GenL2::slump(&mut gg2));
-            }
             d.skada = 0.0;
             d.senaste_skada = 0.0;
             d.senaste_r_b1 = None;
             d.hj_b1 = None;
-            d.hj_l2 = None;
         }
         self.rovdjur_b1 = Some(RovdjurB1 {
             param,
@@ -1586,23 +1573,14 @@ impl Sim {
                     d.hj2059 = None;
                     d.senaste_de = None;
                 }
-                if d.formaga.cfg_b1(10.0).is_some()
-                    || d.formaga.cfg_l2(10.0).is_some()
-                    || d.formaga.ar_tabell_b1()
-                {
+                if d.formaga.cfg_b1(10.0).is_some() || d.formaga.ar_tabell_b1() {
                     d.hj_b1 = None;
-                    d.hj_l2 = None;
                     d.senaste_r_b1 = None;
-                    d.senaste_de = None;
                     d.skada = 0.0;
                     d.senaste_skada = 0.0;
                     if d.gen_b1.is_none() {
                         let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
                         d.gen_b1 = Some(GenB1::slump(&mut gg));
-                    }
-                    if d.gen_l2.is_none() {
-                        let mut gg2 = Rng::new(d.uid ^ 0x2348_1A17_0001);
-                        d.gen_l2 = Some(GenL2::slump(&mut gg2));
                     }
                 }
             }
@@ -2047,16 +2025,7 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            let kost_hj = if self.djur[idx]
-                .hj_l2
-                .as_ref()
-                .is_some_and(|h| h.senaste_var_mode1)
-            {
-                hjkost * MODE1_KOST_FAKTOR
-            } else {
-                hjkost
-            };
-            self.djur[idx].e -= kost_hj;
+            self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2181,16 +2150,7 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            let kost_hj = if self.djur[idx]
-                .hj_l2
-                .as_ref()
-                .is_some_and(|h| h.senaste_var_mode1)
-            {
-                hjkost * MODE1_KOST_FAKTOR
-            } else {
-                hjkost
-            };
-            self.djur[idx].e -= kost_hj;
+            self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2277,16 +2237,7 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            let kost_hj = if self.djur[idx]
-                .hj_l2
-                .as_ref()
-                .is_some_and(|h| h.senaste_var_mode1)
-            {
-                hjkost * MODE1_KOST_FAKTOR
-            } else {
-                hjkost
-            };
-            self.djur[idx].e -= kost_hj;
+            self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2388,16 +2339,7 @@ impl Sim {
                 }
                 self.djur[idx].forra_kron_grann_medel = if k_n > 0 { k_sum / k_n as f64 } else { 0.0 };
             }
-            let kost_hj = if self.djur[idx]
-                .hj_l2
-                .as_ref()
-                .is_some_and(|h| h.senaste_var_mode1)
-            {
-                hjkost * MODE1_KOST_FAKTOR
-            } else {
-                hjkost
-            };
-            self.djur[idx].e -= kost_hj;
+            self.djur[idx].e -= hjkost;
             let (di, dj) = GRANNAR[a];
             let ni = i0 as i32 + di;
             let nj = j0 as i32 + dj;
@@ -2785,56 +2727,6 @@ impl Sim {
                         a_m
                     } else {
                         hjb.valj_lott(&s_b1, true, &mut rng)
-                    }
-                };
-                self.djur[idx].egen_rng = rng;
-                self.notera_utforsk_val(idx, a, !slump);
-                a
-            }
-            Formaga::LarL2Konst(eps, _)
-            | Formaga::LarL2Inst(eps, _)
-            | Formaga::LarL2M1(eps, _)
-            | Formaga::LarL2Full(eps, _)
-            | Formaga::StrykL2Inst(eps, _) => {
-                let r_klamp = self
-                    .rovdjur_b1
-                    .as_ref()
-                    .map(|r| r.param.r_klamp)
-                    .unwrap_or(100.0);
-                let cfg = formaga.cfg_l2(r_klamp).unwrap();
-                let s_b1 = self.sinnen_b1(idx, s);
-                let e_skala = self.e_skala;
-                let mut rng = std::mem::replace(&mut self.djur[idx].egen_rng, Rng::new(0));
-                let slump = eps > 0.0 && rng.f() < eps;
-                let a = {
-                    let d = &mut self.djur[idx];
-                    if d.gen_b1.is_none() {
-                        let mut gg = Rng::new(d.uid ^ 0x2282_1A17_0001);
-                        d.gen_b1 = Some(GenB1::slump(&mut gg));
-                    }
-                    if d.gen_l2.is_none() {
-                        let mut gg2 = Rng::new(d.uid ^ 0x2348_1A17_0001);
-                        d.gen_l2 = Some(GenL2::slump(&mut gg2));
-                    }
-                    if d.hj_l2.is_none() {
-                        let gb1 = d.gen_b1.as_ref().unwrap();
-                        d.hj_l2 = Some(Box::new(HjL2::fran_gen(&d.hj.gen, gb1, cfg)));
-                    }
-                    let w_skada = d.gen_b1.as_ref().map(|g| g.w_skada).unwrap_or(0.0);
-                    let gl2 = *d.gen_l2.as_ref().unwrap();
-                    let kropp = KroppL2::fran_djur(d.e, e_skala, d.skada, d.age);
-                    let hjl = d.hj_l2.as_mut().unwrap();
-                    hjl.cfg = cfg;
-                    if let Some(de) = d.senaste_de.take() {
-                        hjl.vanta_de = Some(de);
-                        hjl.vanta_skada = Some(d.senaste_skada);
-                    }
-                    if slump {
-                        let a_m = hjl.minst_besokta_handling(&mut rng);
-                        hjl.lar_och_satt(&s_b1, true, a_m);
-                        a_m
-                    } else {
-                        hjl.valj_lott(&s_b1, true, w_skada, &gl2, kropp, &mut rng)
                     }
                 };
                 self.djur[idx].egen_rng = rng;
@@ -3239,7 +3131,6 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
-                self.djur[i].hj_l2 = None;
                 if let Some(ref mut rov) = self.rovdjur_b1 {
                     let ar_vuxen = self.djur[i].age >= tal::LITEN;
                     if markt {
@@ -3267,7 +3158,6 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
-                self.djur[i].hj_l2 = None;
                 self.rak.dod_svalt += 1;
                 self.rak.dod_svalt_ar += 1;
             } else if self.djur[i].age >= self.liv_steg.unwrap_or(tal::LIV) {
@@ -3283,7 +3173,6 @@ impl Sim {
                 self.djur[i].lev = false;
                 self.djur[i].hj2059 = None;
                 self.djur[i].hj_b1 = None;
-                self.djur[i].hj_l2 = None;
                 self.rak.dod_alder += 1;
                 self.rak.dod_alder_ar += 1;
             }
@@ -3317,10 +3206,6 @@ impl Sim {
                 (Some(mg), Some(fg)) => Some(GenB1::arv(mg, fg, uid)),
                 _ => None,
             };
-            let gen_l2 = match (&self.djur[mor].gen_l2, &self.djur[far].gen_l2) {
-                (Some(mg), Some(fg)) => Some(GenL2::arv(mg, fg, uid)),
-                _ => None,
-            };
             let eps = arv_eps(self.djur[mor].eps, self.djur[far].eps, uid);
             let unge = Dino {
                 lev: true,
@@ -3349,8 +3234,6 @@ impl Sim {
                 senaste_skada: 0.0,
                 senaste_r_b1: None,
                 forra_kron_grann_medel: 0.0,
-                hj_l2: None,
-                gen_l2,
             };
             self.nasta_uid += 1;
             let formaga_unge = unge.formaga;
