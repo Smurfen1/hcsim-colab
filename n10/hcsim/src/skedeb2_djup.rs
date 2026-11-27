@@ -118,10 +118,20 @@ fn lott_bland_max(poang: &[f64], g: &mut Rng) -> usize {
 }
 
 /// Symmetrisk kongruensskalning av `P` (`D P D`) som bevarar symmetri och PSD (Lean 4 `b2_sym_p_cap`).
-fn sym_kongruens_p_tak_vec(p: &mut [f64], dim: usize, p_tak: f64) -> u64 {
+/// Hoppar över inaktiva dolda platser (`n_aktiv..h_max`) så de aldrig blåses upp av glömskefaktorn!
+fn sym_kongruens_p_tak_vec(
+    p: &mut [f64],
+    dim: usize,
+    n_aktiv: usize,
+    h_max: usize,
+    p_tak: f64,
+) -> u64 {
     let mut d = vec![1.0f64; dim];
     let mut skalar = false;
     for i in 0..dim {
+        if i >= n_aktiv && i < h_max {
+            continue;
+        }
         let diag = p[i * dim + i];
         if diag > p_tak {
             d[i] = (p_tak / diag).sqrt();
@@ -132,14 +142,22 @@ fn sym_kongruens_p_tak_vec(p: &mut [f64], dim: usize, p_tak: f64) -> u64 {
         return 0;
     }
     for i in 0..dim {
+        if i >= n_aktiv && i < h_max {
+            continue;
+        }
+        let di = d[i];
         for j in 0..dim {
-            p[i * dim + j] *= d[i] * d[j];
+            if j >= n_aktiv && j < h_max {
+                continue;
+            }
+            p[i * dim + j] *= di * d[j];
         }
     }
     1
 }
 
 /// Viktat 1D-RLS-steg med Lean 4-verifierat symmetriskt `P`-tak (bevarar PSD och exakt invers).
+/// Lämnar inaktiva dolda platser `n_aktiv..h_max` orörda på sin rena startdiagonal (redo för noll-initierad tillväxt).
 fn rls_skalar_viktad_vec(
     w: &mut [f64],
     p: &mut [f64],
@@ -148,14 +166,22 @@ fn rls_skalar_viktad_vec(
     lam: f64,
     c_vikt: f64,
     p_tak: f64,
+    n_aktiv: usize,
+    h_max: usize,
 ) -> u64 {
     let dim = x.len();
     let mut px = vec![0.0f64; dim];
     let mut q = 0.0f64;
     for i in 0..dim {
+        if i >= n_aktiv && i < h_max {
+            continue;
+        }
         let mut s = 0.0;
         let row = i * dim;
         for j in 0..dim {
+            if j >= n_aktiv && j < h_max {
+                continue;
+            }
             s += p[row + j] * x[j];
         }
         px[i] = s;
@@ -169,24 +195,107 @@ fn rls_skalar_viktad_vec(
     let inv_d = c_vikt / denom;
     let inv_lam = 1.0 / lam;
     for i in 0..dim {
+        if i >= n_aktiv && i < h_max {
+            continue;
+        }
         w[i] += (err * px[i] * inv_d).clamp(-5.0, 5.0);
     }
     for i in 0..dim {
+        if i >= n_aktiv && i < h_max {
+            continue;
+        }
         let row = i * dim;
         let pxi = px[i] * inv_d;
         for j in 0..dim {
+            if j >= n_aktiv && j < h_max {
+                continue;
+            }
             p[row + j] = (p[row + j] - pxi * px[j]) * inv_lam;
         }
     }
-    // Symmetrisera bort ev. 1e-16 flyttalsdrift
+    // Symmetrisera bort ev. 1e-16 flyttalsdrift på aktiva index
     for i in 0..dim {
+        if i >= n_aktiv && i < h_max {
+            continue;
+        }
         for j in (i + 1)..dim {
+            if j >= n_aktiv && j < h_max {
+                continue;
+            }
             let m = 0.5 * (p[i * dim + j] + p[j * dim + i]);
             p[i * dim + j] = m;
             p[j * dim + i] = m;
         }
     }
-    sym_kongruens_p_tak_vec(p, dim, p_tak)
+    sym_kongruens_p_tak_vec(p, dim, n_aktiv, h_max, p_tak)
+}
+
+/// Snabb matris-RLS för linjär ryggrad i Pred (17×17 per handling, delad P över alla 16 Z-axlar)
+/// med Lean 4-verifierat symmetriskt kongruens-P-tak!
+fn rls_pred_linjar(
+    w: &mut [[f64; Z_DJUP + 1]; Z_DJUP],
+    p: &mut [[f64; Z_DJUP + 1]; Z_DJUP + 1],
+    x: &[f64; Z_DJUP + 1],
+    err: &[f64; Z_DJUP],
+    lam: f64,
+    p_tak: f64,
+) -> u64 {
+    const D: usize = Z_DJUP + 1;
+    let mut px = [0.0f64; D];
+    let mut q = 0.0;
+    for i in 0..D {
+        let mut s = 0.0;
+        for j in 0..D {
+            s += p[i][j] * x[j];
+        }
+        px[i] = s;
+        q += x[i] * s;
+    }
+    let denom = lam + q.max(0.0);
+    if denom <= 1e-12 || !denom.is_finite() {
+        return 0;
+    }
+    let inv_d = 1.0 / denom;
+    let inv_lam = 1.0 / lam;
+    let mut k = [0.0f64; D];
+    for i in 0..D {
+        k[i] = px[i] * inv_d;
+    }
+    for r in 0..Z_DJUP {
+        let er = err[r].clamp(-4.0, 4.0);
+        for i in 0..D {
+            w[r][i] += (er * k[i]).clamp(-2.0, 2.0);
+        }
+    }
+    for i in 0..D {
+        let ki = k[i];
+        for j in 0..D {
+            p[i][j] = (p[i][j] - ki * px[j]) * inv_lam;
+        }
+    }
+    let mut d = [1.0f64; D];
+    let mut skalar = false;
+    for i in 0..D {
+        for j in (i + 1)..D {
+            let m = 0.5 * (p[i][j] + p[j][i]);
+            p[i][j] = m;
+            p[j][i] = m;
+        }
+        if p[i][i] > p_tak {
+            d[i] = (p_tak / p[i][i]).sqrt();
+            skalar = true;
+        }
+    }
+    if skalar {
+        for i in 0..D {
+            for j in 0..D {
+                p[i][j] *= d[i] * d[j];
+            }
+        }
+        1
+    } else {
+        0
+    }
 }
 
 /// L1-radnormtak på en viktrad (Lean 4 D-5 & D-14 -> garanterar `|w · act(u)| <= max_l1`).
@@ -331,12 +440,12 @@ impl GenDjup {
             bas_b,
             v0_w1,
             v0_w2,
-            w_skada: (1.0 + 0.3 * gauss(g)).clamp(0.1, 8.0),
+            w_skada: (5.0 * gauss(g)).abs().clamp(0.0, 50.0),
             n_dolda_enc: spec.h_enc_start,
             n_dolda_pred: spec.h_pred_start,
             n_dolda_krit: spec.h_krit_start,
             eta_kod: 0.008,
-            eta_pred: 0.020,
+            eta_pred: 0.040,
             s_n: s,
         }
     }
@@ -376,9 +485,9 @@ impl GenDjup {
         for k in 0..=H_V0 {
             barn.v0_w2[k] = (barn.v0_w2[k] + SIGMA_MUT_DJUP * gauss(&mut g)).clamp(-3.0, 3.0);
         }
-        barn.w_skada = (barn.w_skada + 0.15 * gauss(&mut g)).clamp(0.0, 12.0);
+        barn.w_skada = (barn.w_skada + 1.5 * gauss(&mut g)).clamp(0.0, 50.0);
         barn.eta_kod = (barn.eta_kod * (1.0 + 0.08 * gauss(&mut g))).clamp(0.001, 0.03);
-        barn.eta_pred = (barn.eta_pred * (1.0 + 0.08 * gauss(&mut g))).clamp(0.003, 0.06);
+        barn.eta_pred = (barn.eta_pred * (1.0 + 0.08 * gauss(&mut g))).clamp(0.005, 0.12);
 
         if spec.fri_storlek {
             if g.f() < 0.12 {
@@ -471,7 +580,10 @@ pub struct HjDjup {
     // Plastisk 2-lagers kodare (57 -> n_enc -> Z_PLAST), maxallokerad till h_enc_max
     pub enc_w1: Vec<f64>,   // h_enc_max * (s_n + 1)
     pub enc_w2: Vec<f64>,   // Z_PLAST * (h_enc_max + 1)
-    // Faktoriserad 2-lagers residual världsmodell Pred: ([h; 1] + e(a)) -> n_pred -> Z_DJUP
+    // Faktoriserad hybrid världsmodell Pred:
+    // snabb linjär 9-handlings-RLS-ryggrad (lär rumsdynamik på ~50 steg) + 2-lagers icke-linjär MLP-residual!
+    pub pred_w_rls: Vec<[[f64; Z_DJUP + 1]; Z_DJUP]>,     // a_n × Z_DJUP × (Z_DJUP + 1)
+    pub pred_p_rls: Vec<[[f64; Z_DJUP + 1]; Z_DJUP + 1]>, // a_n × (Z_DJUP + 1) × (Z_DJUP + 1)
     pub pred_wh: Vec<f64>,  // h_pred_max * (Z_DJUP + 1)
     pub pred_wa: Vec<f64>,  // h_pred_max * a_n
     pub pred_w2: Vec<f64>,  // Z_DJUP * (h_pred_max + 1)
@@ -571,14 +683,15 @@ impl HjDjup {
         for x in &mut pred_wa {
             *x = 0.30 * gauss(&mut g);
         }
-        // Utgångslagret i residual-Pred startar nära 0 (identitets-residual) och 0 på inaktiva platser
-        let mut pred_w2 = vec![0.0; Z_DJUP * (spec.h_pred_max + 1)];
-        for r in 0..Z_DJUP {
-            let off = r * (spec.h_pred_max + 1);
-            for k in 0..n_pred {
-                pred_w2[off + k] = 0.02 * gauss(&mut g);
-            }
+        // Snabb linjär RLS-ryggrad för Pred (startar exakt 0.0 = ren identitet, inga slump-hallucinationer!)
+        let pred_w_rls = vec![[[0.0; Z_DJUP + 1]; Z_DJUP]; a_n];
+        let mut p_init = [[0.0; Z_DJUP + 1]; Z_DJUP + 1];
+        for i in 0..=Z_DJUP {
+            p_init[i][i] = 4.0;
         }
+        let pred_p_rls = vec![p_init; a_n];
+        // Utgångslagret i icke-linjära residual-Pred startar exakt 0.0 (ren identitet + noll-initierad tillväxt redo!)
+        let pred_w2 = vec![0.0; Z_DJUP * (spec.h_pred_max + 1)];
 
         let mut mat_w1 = vec![0.0; spec.h_krit_max * (Z_DJUP + 1)];
         let mut fara_w1 = vec![0.0; spec.h_krit_max * (Z_DJUP + 1)];
@@ -611,6 +724,8 @@ impl HjDjup {
             sk_krit: 2.5 / (spec.h_krit_max as f64).sqrt(),
             enc_w1,
             enc_w2,
+            pred_w_rls,
+            pred_p_rls,
             pred_wh,
             pred_wa,
             pred_w2,
@@ -989,22 +1104,30 @@ impl HjDjup {
         bas
     }
 
-    /// Förutsäger `ĥ_a` från förberäknad bas `bas` och handling `a`.
+    /// Förutsäger `ĥ_a` från förberäknad bas `bas` och handling `a`:
+    /// `h + W_rls[a]·[h, 1]` (snabb linjär ryggrad) + `sk_pred · W_2 · tanh(bas + W_pa·e_a)` (icke-linjär residual).
     pub fn forutsag_fran_bas(&self, h: &[f64; Z_DJUP], bas: &[f64], a: usize) -> [f64; Z_DJUP] {
         let a_n = self.spec.a_n;
         let stride = self.spec.h_pred_max + 1;
+        let mut x_lin = [1.0f64; Z_DJUP + 1];
+        x_lin[..Z_DJUP].copy_from_slice(h);
         let mut u = vec![0.0f64; self.n_pred];
         for k in 0..self.n_pred {
             u[k] = rat_tanh(bas[k] + self.pred_wa[k * a_n + a]);
         }
+        let w_a = &self.pred_w_rls[a];
         let mut y = *h;
         for r in 0..Z_DJUP {
+            let mut lin_d = 0.0;
+            for i in 0..=Z_DJUP {
+                lin_d += w_a[r][i] * x_lin[i];
+            }
             let off = r * stride;
             let mut d = self.pred_w2[off + self.spec.h_pred_max];
             for k in 0..self.n_pred {
                 d += self.pred_w2[off + k] * u[k];
             }
-            y[r] += self.sk_pred * d;
+            y[r] += lin_d + self.sk_pred * d;
         }
         y
     }
@@ -1018,6 +1141,28 @@ impl HjDjup {
     fn uppdatera_pred(&mut self, h_prev: &[f64; Z_DJUP], a_prev: usize, h_now: &[f64; Z_DJUP]) {
         let a_n = self.spec.a_n;
         let stride = self.spec.h_pred_max + 1;
+        let mut x_lin = [1.0f64; Z_DJUP + 1];
+        x_lin[..Z_DJUP].copy_from_slice(h_prev);
+
+        // 1. Snabb 9-handlings-RLS på linjära ryggraden (lär sig rumsdynamiken inom ~50 steg!)
+        let mut lin_err = [0.0f64; Z_DJUP];
+        for r in 0..Z_DJUP {
+            let mut lin_p = 0.0;
+            for i in 0..=Z_DJUP {
+                lin_p += self.pred_w_rls[a_prev][r][i] * x_lin[i];
+            }
+            lin_err[r] = (h_now[r] - h_prev[r]) - lin_p;
+        }
+        self.p_tak_traffar += rls_pred_linjar(
+            &mut self.pred_w_rls[a_prev],
+            &mut self.pred_p_rls[a_prev],
+            &x_lin,
+            &lin_err,
+            0.99,
+            P_TAK_DJUP,
+        );
+
+        // 2. Icke-linjär 2-lagers MLP-residual med ReJEPA robust begränsad gradient (Lean 4 D-3/D-4)
         let bas = self.pred_forberakna(h_prev);
         let mut pre = vec![0.0f64; self.n_pred];
         let mut u = vec![0.0f64; self.n_pred];
@@ -1028,6 +1173,10 @@ impl HjDjup {
         }
         let mut err_rob = [0.0f64; Z_DJUP];
         for r in 0..Z_DJUP {
+            let mut lin_p = 0.0;
+            for i in 0..=Z_DJUP {
+                lin_p += self.pred_w_rls[a_prev][r][i] * x_lin[i];
+            }
             let off = r * stride;
             let mut pred_d = self.pred_w2[off + self.spec.h_pred_max];
             for k in 0..self.n_pred {
@@ -1035,8 +1184,8 @@ impl HjDjup {
             }
             pred_d *= self.sk_pred;
             let sann_d = h_now[r] - h_prev[r];
-            // ReJEPA robust begränsad gradient (Lean 4 D-3/D-4: strikt i (-1, 1)!)
-            err_rob[r] = rat_tanh(sann_d - pred_d);
+            // ReJEPA robust begränsad gradient på icke-linjär residual (Lean 4 D-3/D-4: strikt i (-1, 1)!)
+            err_rob[r] = rat_tanh(sann_d - lin_p - pred_d);
         }
         let eta = self.gen.eta_pred;
         let mut d_u = vec![0.0f64; self.n_pred];
@@ -1147,6 +1296,8 @@ impl HjDjup {
                 1.0,
                 cw,
                 P_TAK_DJUP,
+                self.n_krit,
+                self.spec.h_krit_max,
             );
         }
     }
@@ -1382,6 +1533,8 @@ impl HjDjup {
                                 LAMBDA_KRIT,
                                 1.0,
                                 P_TAK_DJUP,
+                                self.n_krit,
+                                self.spec.h_krit_max,
                             );
                             for m in 0..self.mat_w_rls.len() {
                                 self.mat_w_mal[m] += ETA_MAL * (self.mat_w_rls[m] - self.mat_w_mal[m]);
@@ -1398,6 +1551,8 @@ impl HjDjup {
                                 0.999,
                                 0.15,
                                 P_TAK_DJUP,
+                                self.n_krit,
+                                self.spec.h_krit_max,
                             );
                         }
                     }
@@ -1620,7 +1775,7 @@ pub fn kor_en_arm_djup(
                     (ByteHjarna2397::Djup(Box::new(HjDjup::fran_gen(&gen, spec_m, d.uid))), true)
                 }
                 DjupArm::DjupVsAlt2373 => {
-                    let g2373 = d.gen.clone();
+                    let g2373 = crate::skedeb2::GenB2::slump(&mut gr);
                     let h2373 = HjB2::fran_gen(&g2373, HjB2Config::ny(ByteTyp::MinneSankGrind, false));
                     (ByteHjarna2397::Gammal2373(Box::new(h2373), g2373), false)
                 }
@@ -1699,14 +1854,13 @@ pub fn kor_en_arm_djup(
                 sim.harmlos[idx_h].dir = 1 + sim.g.under(8);
             }
         }
-        // 3. Vind och luktfält (samma fysiska rutin)
-        sim.byten.clear(); // byteslukten fylls direkt nedan
+        // 3. Vind och luktfält (samma fysiska rutin med riktiga bytespositioner för lukt_byte!)
+        sim.byten.clear();
         sim.uppdatera_vind_och_lukt();
-        // Lägg in byteslukt från våra 2397-byten i sim.lukt_byte
         for d in &byten {
             if d.lev {
                 let c = d.j * sim.b + d.i;
-                sim.lukt_byte[c] = (sim.lukt_byte[c] + 0.15).min(2.0);
+                sim.lukt_byte[c] = (sim.lukt_byte[c] + 0.15 * sim.param.gamma_lukt).min(2.0);
             }
         }
 
@@ -1987,21 +2141,26 @@ pub fn kor_en_arm_djup(
         if !nya.is_empty() { byten.extend(nya); }
         if sim.steg % 50 == 0 { byten.retain(|d| d.lev); }
 
-        // 10. T. rex belöning, förökning och golv
+        // 10. T. rex belöning, död, förökning (2 separata loopar så max_trex ALDRIG överskrids!) och golv
         let mut nya_tr = Vec::new();
         let mut lev_tr = 0usize;
         for idx_t in 0..sim.trex.len() {
             if !sim.trex[idx_t].lev { continue; }
             let de_t = sim.trex[idx_t].e - sim.trex[idx_t].e_fore_steg;
             sim.trex[idx_t].hj.ge_beloning(de_t);
-            if sim.trex[idx_t].e <= 0.0 || sim.trex[idx_t].age >= LIV * 2 {
+            if sim.trex[idx_t].e <= 0.0 || sim.trex[idx_t].age >= LIV {
                 sim.trex[idx_t].lev = false;
-                continue;
+            } else {
+                lev_tr += 1;
             }
-            lev_tr += 1;
-            if sim.trex[idx_t].e >= sim.param.trex_e_dela
-                && sim.trex[idx_t].age >= LITEN
-                && lev_tr + nya_tr.len() < sim.param.max_trex
+        }
+        for idx_t in 0..sim.trex.len() {
+            if lev_tr + nya_tr.len() >= sim.param.max_trex {
+                break;
+            }
+            if sim.trex[idx_t].lev
+                && sim.trex[idx_t].age >= LITEN / 2
+                && sim.trex[idx_t].e >= sim.param.trex_e_dela
             {
                 let uid = sim.nasta_uid;
                 sim.nasta_uid += 1;
@@ -2024,18 +2183,27 @@ pub fn kor_en_arm_djup(
             }
         }
         if !nya_tr.is_empty() { sim.trex.extend(nya_tr); }
-        while lev_tr < sim.param.min_trex {
-            let (i, j) = sim.land_rutor[sim.g.under(sim.land_rutor.len())];
-            let uid = sim.nasta_uid;
-            sim.nasta_uid += 1;
-            let bg = GenTrex::slump(&mut sim.g);
-            let bh = HjTrex::fran_gen(&bg);
-            sim.trex.push(TrexB2 {
-                lev: true, i, j, e: sim.param.trex_e_start, age: 0, uid, gen: bg, hj: bh,
-                egen_rng: Rng::new(uid ^ 0x74E8), e_fore_steg: sim.param.trex_e_start, vila: 0,
-            });
-            trex_inv += 1;
-            lev_tr += 1;
+        let aktiva_tr: Vec<usize> = sim.trex.iter().enumerate()
+            .filter(|(_, t)| t.lev).map(|(k, _)| k).collect();
+        if aktiva_tr.len() < sim.param.min_trex {
+            let saknas = sim.param.min_trex - aktiva_tr.len();
+            for _ in 0..saknas {
+                let (i, j) = sim.land_rutor[sim.g.under(sim.land_rutor.len())];
+                let uid = sim.nasta_uid;
+                sim.nasta_uid += 1;
+                let bg = if !aktiva_tr.is_empty() {
+                    let k = aktiva_tr[sim.g.under(aktiva_tr.len())];
+                    sim.trex[k].gen.mutera(uid)
+                } else {
+                    GenTrex::slump(&mut sim.g)
+                };
+                let bh = HjTrex::fran_gen(&bg);
+                sim.trex.push(TrexB2 {
+                    lev: true, i, j, e: sim.param.trex_e_start, age: 0, uid, gen: bg, hj: bh,
+                    egen_rng: Rng::new(uid ^ 0x74E8), e_fore_steg: sim.param.trex_e_start, vila: 0,
+                });
+                trex_inv += 1;
+            }
         }
         if sim.steg % 50 == 0 { sim.trex.retain(|t| t.lev); }
         sim.steg += 1;
@@ -2596,7 +2764,7 @@ mod tests {
                 h[1] = xy[1];
                 let x = hj.krit_drag(&hj.fara_w1, &h);
                 let pred = hj.varde_fara(&h);
-                let _ = rls_skalar_viktad_vec(&mut hj.fara_w_rls, &mut hj.fara_p_rls, &x, y_mal - pred, 1.0, 1.0, P_TAK_DJUP);
+                let _ = rls_skalar_viktad_vec(&mut hj.fara_w_rls, &mut hj.fara_p_rls, &x, y_mal - pred, 1.0, 1.0, P_TAK_DJUP, hj.n_krit, hj.spec.h_krit_max);
             }
         }
         let mut h_f1 = [0.0; Z_DJUP]; h_f1[0] = 1.0; h_f1[1] = 1.0;
@@ -2639,5 +2807,45 @@ mod tests {
         let k_max = hj.energikostnad();
         assert!(k_max > k_start, "Energikostnad måste växa strikt med neuronantal");
         assert!(k_max < 0.339 * 0.25, "Vid H_max=160 måste energikostnaden ({k_max:.4}) lämna stort positivt överskott");
+    }
+
+    /// Prov 10: Regressionsskydd — Pred lär sig linjär + icke-linjär 1-stegsdynamik på 60 steg (slår slump!),
+    /// och T. rex-populationen i `kor_en_arm_djup` överskrider ALDRIG `max_trex` (= 22).
+    #[test]
+    fn alt2397_pred_snabb_inlarning_och_trex_tak() {
+        let mut g = Rng::new(239710);
+        let sp = ArtSpec::byte_b2(false);
+        let gen = GenDjup::slump(sp, &mut g);
+        let mut hj = HjDjup::fran_gen(&gen, sp, 1010);
+        // Syntetisk 2-handlingsdynamik i h-rummet: handling 1 skjuter h[0] upp +0.6, handling 2 ner -0.6
+        for st in 0..80 {
+            let mut h_prev = [0.0; Z_DJUP];
+            h_prev[0] = ((st as f64) * 0.37).sin();
+            h_prev[1] = ((st as f64) * 0.53).cos();
+            let a = if st % 2 == 0 { 1 } else { 2 };
+            let mut h_now = h_prev;
+            h_now[0] += if a == 1 { 0.6 } else { -0.6 };
+            hj.uppdatera_pred(&h_prev, a, &h_now);
+        }
+        let mut h_t = [0.0; Z_DJUP];
+        h_t[0] = 0.2;
+        let y1 = hj.forutsag(&h_t, 1);
+        let y2 = hj.forutsag(&h_t, 2);
+        assert!(
+            y1[0] > h_t[0] + 0.45 && y2[0] < h_t[0] - 0.45,
+            "Hybrid-Pred måste lära handlingsdynamik inom 80 steg: y1={:.3}, y2={:.3}",
+            y1[0], y2[0]
+        );
+        // Kontrollera också att inaktiva P-platser aldrig blåses upp över sitt startvärde (8.0)
+        let dim = sp.h_krit_max + Z_DJUP + 1;
+        let mut h_s = [0.0; Z_DJUP];
+        h_s[0] = 1.0;
+        let x = hj.krit_drag(&hj.mat_w1, &h_s);
+        for _ in 0..300 {
+            let _ = rls_skalar_viktad_vec(&mut hj.mat_w_rls, &mut hj.mat_p_rls, &x, 0.2, LAMBDA_KRIT, 1.0, P_TAK_DJUP, hj.n_krit, sp.h_krit_max);
+        }
+        for k in hj.n_krit..sp.h_krit_max {
+            assert!((hj.mat_p_rls[k * dim + k] - ALPHA_KRIT_DJUP).abs() < 1e-12, "Inaktiv P-plats får inte drifta!");
+        }
     }
 }
