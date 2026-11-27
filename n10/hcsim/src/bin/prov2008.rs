@@ -1619,35 +1619,218 @@ fn main() {
                 }
             }
         }
-        Some("sparb2348") => {
-            let fron_str = v("--fron").unwrap_or_else(|| "261-280".to_string());
+        Some("kalib_b2") | Some("sparb2361") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "261-265".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(5);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(20);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let ut_fil = v("--ut").map(PathBuf::from);
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let mut param = hcsim::skedeb2::B2Param::default();
+            if let Some(x) = v("--vaxt-skala").and_then(|s| s.parse().ok()) { param.vaxt_skala = x; }
+            if let Some(x) = v("--start-trex").and_then(|s| s.parse().ok()) { param.start_trex = x; }
+            if let Some(x) = v("--p-angrepp").and_then(|s| s.parse().ok()) { param.p_angrepp_bas = x; }
+            if let Some(x) = v("--bakhall").and_then(|s| s.parse().ok()) { param.bakhall_faktor = x; }
+            if let Some(x) = v("--p-dod").and_then(|s| s.parse().ok()) { param.p_dod_vid_traff = x; }
+            if let Some(x) = v("--trex-byte-e").and_then(|s| s.parse().ok()) { param.trex_byte_energi = x; }
+            if let Some(x) = v("--trex-kost").and_then(|s| s.parse().ok()) { param.trex_kost_steg = x; }
+            if v("--belonings-grind").as_deref() == Some("1") { param.belonings_grind = true; }
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match hcsim::skedeb2::kora_sparb2361(&fron, inkor_ar, tavling_ar, tradar, param, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(ref p) = ut_fil {
+                        if let Some(par) = p.parent() {
+                            let _ = create_dir_all(par);
+                        }
+                        let _ = std::fs::write(p, &t);
+                    }
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL sparb2361: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("diag2379") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "261-265".to_string());
             let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
             let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(50);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(12);
+            let ut_fil = v("--ut").map(PathBuf::from);
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let param = hcsim::skedeb2::B2Param::v2_skarp();
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match hcsim::skedeb2::kora_diag2379(&fron, inkor_ar, tavling_ar, tradar, param, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(ref p) = ut_fil {
+                        if let Some(par) = p.parent() { let _ = create_dir_all(par); }
+                        let _ = std::fs::write(p, &t);
+                    }
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL diag2379: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("forprov2379") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "261-265".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(50);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(5);
+            let ut_fil = v("--ut").map(PathBuf::from);
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match hcsim::skedeb2::kora_forprov2379(&fron, inkor_ar, tavling_ar, tradar) {
+                Ok(t) => {
+                    if let Some(ref p) = ut_fil {
+                        if let Some(par) = p.parent() { let _ = create_dir_all(par); }
+                        let _ = std::fs::write(p, &t);
+                    }
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL forprov2379: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("grind2398") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "266-267".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(2);
+            let prov_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(5);
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match hcsim::skedeb2_djup::kora_grind2398_tidsbank(&fron, inkor_ar, prov_ar) {
+                Ok(t) => println!("{t}"),
+                Err(e) => {
+                    eprintln!("FEL grind2398: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("sparb2397") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "266-280".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(250);
             let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(8);
-            let ut_fil = v("--ut")
-                .map(PathBuf::from)
-                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2348/sparb2348-resultat.md"));
+            let steg_str = v("--steg").unwrap_or_else(|| "1".to_string());
+            let ut_fil = v("--ut").map(PathBuf::from);
             let ra_ut = v("--ra-ut").map(PathBuf::from);
             let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
                 eprintln!("FEL --fron: {e}");
                 std::process::exit(2);
             });
-            match kora_sparb2348(&fron, inkor_ar, tavling_ar, tradar, ra_ut.as_deref()) {
+            let armar = match steg_str.as_str() {
+                "1" => vec![
+                    hcsim::skedeb2_djup::DjupArm::DjupVsFalskLukt,
+                    hcsim::skedeb2_djup::DjupArm::DjupVsAlt2373,
+                    hcsim::skedeb2_djup::DjupArm::DjupVsStrykWm,
+                ],
+                "2" => vec![
+                    hcsim::skedeb2_djup::DjupArm::DjupFriVsLast,
+                    hcsim::skedeb2_djup::DjupArm::DjupFriUtanTrex,
+                ],
+                "1a" => vec![hcsim::skedeb2_djup::DjupArm::DjupVsFalskLukt],
+                "1b" => vec![hcsim::skedeb2_djup::DjupArm::DjupVsAlt2373],
+                "1c" => vec![hcsim::skedeb2_djup::DjupArm::DjupVsStrykWm],
+                _ => {
+                    eprintln!("FEL --steg: ange 1, 2, 1a, 1b eller 1c");
+                    std::process::exit(2);
+                }
+            };
+            match hcsim::skedeb2_djup::kora_sparb2397(&fron, &armar, inkor_ar, tavling_ar, tradar, ra_ut.as_deref()) {
                 Ok(t) => {
-                    if let Some(p) = ut_fil.parent() {
-                        let _ = create_dir_all(p);
+                    if let Some(ref p) = ut_fil {
+                        if let Some(par) = p.parent() { let _ = create_dir_all(par); }
+                        let _ = std::fs::write(p, &t);
                     }
-                    let _ = std::fs::write(&ut_fil, &t);
                     println!("{t}");
                 }
                 Err(e) => {
-                    live_logg_med(EGEN_LOGG_2348, "Alt 2348", &format!("FEL i sparb2348: {e}"));
-                    eprintln!("FEL: {e}");
+                    eprintln!("FEL sparb2397: {e}");
                     std::process::exit(1);
                 }
             }
         }
-        Some("slaihops2348") => {
+        Some("kalib2373") | Some("sparb2373") => {
+            let bara_kalib = args[0] == "kalib2373";
+            let fron_str = v("--fron").unwrap_or_else(|| if bara_kalib { "261-265" } else { "261-280" }.to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(if bara_kalib { 5 } else { 10 });
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(if bara_kalib { 25 } else { 50 });
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(12);
+            let ut_fil = v("--ut").map(PathBuf::from);
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let mut param = hcsim::skedeb2::B2Param::v2_skarp();
+            if let Some(x) = v("--vaxt-skala").and_then(|s| s.parse().ok()) { param.vaxt_skala = x; }
+            if let Some(x) = v("--p-angrepp").and_then(|s| s.parse().ok()) { param.p_angrepp_bas = x; }
+            if let Some(x) = v("--bakhall").and_then(|s| s.parse().ok()) { param.bakhall_faktor = x; }
+            if let Some(x) = v("--p-dod").and_then(|s| s.parse().ok()) { param.p_dod_vid_traff = x; }
+            if let Some(x) = v("--byte-skada").and_then(|s| s.parse().ok()) { param.byte_skada_energi = x; }
+            if let Some(x) = v("--gamma-lukt").and_then(|s| s.parse().ok()) { param.gamma_lukt = x; }
+            if let Some(x) = v("--beta-vind").and_then(|s| s.parse().ok()) { param.beta_vind = x; }
+            if let Some(x) = v("--kon-mitt").and_then(|s| s.parse().ok()) { param.kon_mitt = x; }
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match hcsim::skedeb2::kora_sparb2373(&fron, inkor_ar, tavling_ar, tradar, param, bara_kalib, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(ref p) = ut_fil {
+                        if let Some(par) = p.parent() {
+                            let _ = create_dir_all(par);
+                        }
+                        let _ = std::fs::write(p, &t);
+                    }
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL sparb2373: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("diag2370") => {
+            let fron_str = v("--fron").unwrap_or_else(|| "261-265".to_string());
+            let inkor_ar: i64 = v("--inkor").and_then(|x| x.parse().ok()).unwrap_or(10);
+            let tavling_ar: i64 = v("--ar").and_then(|x| x.parse().ok()).unwrap_or(50);
+            let tradar: usize = v("--tradar").and_then(|x| x.parse().ok()).unwrap_or(12);
+            let ut_fil = v("--ut").map(PathBuf::from);
+            let ra_ut = v("--ra-ut").map(PathBuf::from);
+            let param = hcsim::skedeb2::B2Param::default();
+            let fron = tolka_fron(&fron_str).unwrap_or_else(|e| {
+                eprintln!("FEL --fron: {e}");
+                std::process::exit(2);
+            });
+            match hcsim::skedeb2::kora_diag2370(&fron, inkor_ar, tavling_ar, tradar, param, ra_ut.as_deref()) {
+                Ok(t) => {
+                    if let Some(ref p) = ut_fil {
+                        if let Some(par) = p.parent() {
+                            let _ = create_dir_all(par);
+                        }
+                        let _ = std::fs::write(p, &t);
+                    }
+                    println!("{t}");
+                }
+                Err(e) => {
+                    eprintln!("FEL diag2370: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some("slaihops2361") => {
             let in_str = v("--in").unwrap_or_default();
             let filer: Vec<PathBuf> = in_str
                 .split(',')
@@ -1657,8 +1840,8 @@ fn main() {
                 .collect();
             let ut_fil = v("--ut")
                 .map(PathBuf::from)
-                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2348/sparb2348-sammanslagen.md"));
-            match slaihops_2348(&filer) {
+                .unwrap_or_else(|| PathBuf::from("/home/hakan/sandbox/pi/work/hcsim/alt2361/sparb2361-sammanslagen.md"));
+            match hcsim::skedeb2::slaihops_2361(&filer) {
                 Ok(t) => {
                     if let Some(p) = ut_fil.parent() {
                         let _ = create_dir_all(p);
@@ -1667,13 +1850,13 @@ fn main() {
                     println!("{t}");
                 }
                 Err(e) => {
-                    eprintln!("FEL slaihops2348: {e}");
+                    eprintln!("FEL slaihops2361: {e}");
                     std::process::exit(1);
                 }
             }
         }
         _ => {
-            eprintln!("användning: prov2008 ...|sparb2270|slaihops2270|kalib_b1|sparb2282|slaihops2282|sparb2348|slaihops2348 ...");
+            eprintln!("användning: prov2008 ...|sparb2270|slaihops2270|kalib_b1|sparb2282|slaihops2282|kalib_b2|sparb2361|slaihops2361 ...");
             std::process::exit(2);
         }
     }
@@ -8134,592 +8317,6 @@ fn slaihops_2282(filer: &[PathBuf]) -> Result<String, String> {
     Ok(t)
 }
 
-const EGEN_LOGG_2348: &str = "/home/hakan/sandbox/pi/work/hcsim/alt2348/korning.logg";
-
-#[derive(Clone, Default, Serialize, Deserialize)]
-struct TavlingUtfall2348 {
-    #[serde(with = "opt_nan")]
-    slut_andel_fokus: f64,
-    #[serde(with = "opt_nan")]
-    medel_andel_fokus: f64,
-    fodslar_fokus: u64,
-    fodslar_mot: u64,
-    #[serde(with = "opt_nan")]
-    slutpop: f64,
-    utdod: bool,
-    #[serde(with = "opt_nan")]
-    rovdod_vuxen_fokus: f64,
-    #[serde(with = "opt_nan")]
-    rovdod_vuxen_mot: f64,
-    #[serde(with = "opt_nan")]
-    kron_medel_fokus: f64,
-    #[serde(with = "opt_nan")]
-    kron_medel_mot: f64,
-    #[serde(with = "opt_nan")]
-    kron_diff_fokus: f64,
-    #[serde(with = "opt_nan")]
-    kron_diff_mot: f64,
-    #[serde(with = "opt_nan")]
-    g_kron_fokus: f64,
-    #[serde(with = "opt_nan")]
-    krit_mat_r2_fokus: f64,
-    #[serde(with = "opt_nan")]
-    krit_fara_r2_fokus: f64,
-    #[serde(with = "opt_nan")]
-    w_skada_fokus: f64,
-    #[serde(with = "opt_nan")]
-    theta_e_fokus: f64,
-    #[serde(with = "opt_nan")]
-    theta_s_fokus: f64,
-    #[serde(with = "opt_nan")]
-    theta_j_fokus: f64,
-    #[serde(with = "opt_nan")]
-    tau_m1_fokus: f64,
-    #[serde(with = "opt_nan")]
-    mode1_andel_fokus: f64,
-    /// K4-diagnos inom fokuspopulationen (år 40–50): krontäcke för mätta (>168) vs hungriga (<72),
-    /// ungar (<LITEN) vs vuxna (>=LITEN), skadade (>0.05) vs oskadade (==0).
-    #[serde(with = "opt_nan")]
-    kron_matt_minus_hungrig: f64,
-    #[serde(with = "opt_nan")]
-    kron_ung_minus_vuxen: f64,
-    #[serde(with = "opt_nan")]
-    kron_skadad_minus_frisk: f64,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-struct Block2348Json {
-    inkor_ar: i64,
-    tavling_ar: i64,
-    sec: f64,
-    rader: Vec<(u64, Vec<TavlingUtfall2348>)>,
-}
-
-fn mat_l2_diag(sim: &Sim, fokus_ar_markt: bool) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
-    let (mut s_gk, mut n_gk) = (0.0, 0usize);
-    let (mut s_km, mut n_km) = (0.0, 0usize);
-    let (mut s_kf, mut n_kf) = (0.0, 0usize);
-    let (mut s_ws, mut n_ws) = (0.0, 0usize);
-    let (mut s_te, mut s_ts, mut s_tj, mut s_tau, mut n_gl) = (0.0, 0.0, 0.0, 0.0, 0usize);
-    let (mut s_m1, mut n_m1) = (0.0, 0usize);
-    for d in sim.djur.iter().filter(|d| d.lev && d.markt == fokus_ar_markt) {
-        if let Some(ref gb) = d.gen_b1 {
-            s_ws += gb.w_skada;
-            n_ws += 1;
-        }
-        if let Some(ref gl) = d.gen_l2 {
-            s_te += gl.theta_e;
-            s_ts += gl.theta_s;
-            s_tj += gl.theta_j;
-            s_tau += gl.tau_m1_raw.max(0.0);
-            n_gl += 1;
-        }
-        if let Some(ref hl) = d.hj_l2 {
-            if hl.steg >= 200 {
-                s_gk += hl.g_kron();
-                n_gk += 1;
-                let rm = hl.krit_mat_r2();
-                if rm.is_finite() {
-                    s_km += rm;
-                    n_km += 1;
-                }
-                let rf = hl.krit_fara_r2();
-                if rf.is_finite() {
-                    s_kf += rf;
-                    n_kf += 1;
-                }
-                s_m1 += hl.mode1_andel();
-                n_m1 += 1;
-            }
-        }
-    }
-    (
-        if n_gk > 0 { s_gk / n_gk as f64 } else { f64::NAN },
-        if n_km > 0 { s_km / n_km as f64 } else { f64::NAN },
-        if n_kf > 0 { s_kf / n_kf as f64 } else { f64::NAN },
-        if n_ws > 0 { s_ws / n_ws as f64 } else { f64::NAN },
-        if n_gl > 0 { s_te / n_gl as f64 } else { f64::NAN },
-        if n_gl > 0 { s_ts / n_gl as f64 } else { f64::NAN },
-        if n_gl > 0 { s_tj / n_gl as f64 } else { f64::NAN },
-        if n_gl > 0 { s_tau / n_gl as f64 } else { f64::NAN },
-        if n_m1 > 0 { s_m1 / n_m1 as f64 } else { f64::NAN },
-    )
-}
-
-fn kor_tavling_l2_loop(sim: &mut Sim, fokus_ar_markt: bool, tavling_ar: i64) -> TavlingUtfall2348 {
-    let total_steg = tavling_ar.max(2) * STEG_PER_AR;
-    let fonster_ar = 10.min((tavling_ar / 2).max(1));
-    let fonster_start = total_steg - fonster_ar * STEG_PER_AR;
-
-    let (mut sum_andel, mut n_andel) = (0.0f64, 0u64);
-    let (mut bas_fod_m, mut bas_fod_o) = (0u64, 0u64);
-
-    // K4 inom-populationsmätning av krontäcke per fysiologiskt tillstånd (år 40–50)
-    let (mut km_sum, mut km_n, mut kh_sum, mut kh_n) = (0.0f64, 0u64, 0.0f64, 0u64);
-    let (mut ku_sum, mut ku_n, mut kv_sum, mut kv_n) = (0.0f64, 0u64, 0.0f64, 0u64);
-    let (mut ks_sum, mut ks_n, mut kf_sum, mut kf_n) = (0.0f64, 0u64, 0.0f64, 0u64);
-
-    for t in 0..total_steg {
-        if t == fonster_start {
-            bas_fod_m = sim.fodslar_markt;
-            bas_fod_o = sim.fodslar_omarkt;
-            if let Some(ref mut rov) = sim.rovdjur_b1 {
-                rov.nollstall_matare();
-            }
-        }
-        sim.steg();
-        if t >= fonster_start {
-            let b = sim.b;
-            let e_skala = sim.e_skala;
-            let e_low = 0.6 * hcsim::tal::E_START * e_skala;
-            let e_high = 1.4 * hcsim::tal::E_START * e_skala;
-            let (mut nf, mut nm) = (0usize, 0usize);
-            let kron_opt = sim.rovdjur_b1.as_ref().map(|r| &r.kron);
-            for d in sim.djur.iter().filter(|d| d.lev) {
-                if d.markt == fokus_ar_markt {
-                    nf += 1;
-                    if let Some(kron) = kron_opt {
-                        let kv = kron[d.j * b + d.i];
-                        if d.e > e_high {
-                            km_sum += kv;
-                            km_n += 1;
-                        } else if d.e < e_low {
-                            kh_sum += kv;
-                            kh_n += 1;
-                        }
-                        if d.age < hcsim::tal::LITEN {
-                            ku_sum += kv;
-                            ku_n += 1;
-                        } else {
-                            kv_sum += kv;
-                            kv_n += 1;
-                        }
-                        if d.skada > 0.05 {
-                            ks_sum += kv;
-                            ks_n += 1;
-                        } else if d.skada <= 1e-9 {
-                            kf_sum += kv;
-                            kf_n += 1;
-                        }
-                    }
-                } else {
-                    nm += 1;
-                }
-            }
-            if nf + nm > 0 {
-                sum_andel += nf as f64 / (nf + nm) as f64;
-                n_andel += 1;
-            }
-        }
-    }
-
-    let (mut nf_slut, mut tot_slut) = (0usize, 0usize);
-    for d in sim.djur.iter().filter(|d| d.lev) {
-        tot_slut += 1;
-        if d.markt == fokus_ar_markt {
-            nf_slut += 1;
-        }
-    }
-    let (gk, km_r2, kf_r2, ws, te, ts, tj, tau_m1, m1_and) = mat_l2_diag(sim, fokus_ar_markt);
-    let df_m = sim.fodslar_markt.saturating_sub(bas_fod_m);
-    let df_o = sim.fodslar_omarkt.saturating_sub(bas_fod_o);
-    let (fod_f, fod_m) = if fokus_ar_markt { (df_m, df_o) } else { (df_o, df_m) };
-
-    let rov = sim.rovdjur_b1.as_ref().unwrap();
-    let (ds_f, ds_m, dsv_f, dsv_m, drv_f, drv_m, ks_f, ks_m, kd_f, kd_m) = if fokus_ar_markt {
-        (
-            rov.djursteg_markt, rov.djursteg_omarkt,
-            rov.djursteg_vuxen_markt, rov.djursteg_vuxen_omarkt,
-            rov.dod_rovdjur_vuxen_markt, rov.dod_rovdjur_vuxen_omarkt,
-            rov.kron_sum_markt, rov.kron_sum_omarkt,
-            rov.kron_diff_sum_markt, rov.kron_diff_sum_omarkt,
-        )
-    } else {
-        (
-            rov.djursteg_omarkt, rov.djursteg_markt,
-            rov.djursteg_vuxen_omarkt, rov.djursteg_vuxen_markt,
-            rov.dod_rovdjur_vuxen_omarkt, rov.dod_rovdjur_vuxen_markt,
-            rov.kron_sum_omarkt, rov.kron_sum_markt,
-            rov.kron_diff_sum_omarkt, rov.kron_diff_sum_markt,
-        )
-    };
-    let arv_f = dsv_f as f64 / STEG_PER_AR as f64;
-    let arv_m = dsv_m as f64 / STEG_PER_AR as f64;
-
-    TavlingUtfall2348 {
-        slut_andel_fokus: if tot_slut > 0 { nf_slut as f64 / tot_slut as f64 } else { f64::NAN },
-        medel_andel_fokus: if n_andel > 0 { sum_andel / n_andel as f64 } else { f64::NAN },
-        fodslar_fokus: fod_f,
-        fodslar_mot: fod_m,
-        slutpop: tot_slut as f64,
-        utdod: tot_slut < 10,
-        rovdod_vuxen_fokus: if arv_f > 0.0 { drv_f as f64 * 1000.0 / arv_f } else { f64::NAN },
-        rovdod_vuxen_mot: if arv_m > 0.0 { drv_m as f64 * 1000.0 / arv_m } else { f64::NAN },
-        kron_medel_fokus: if ds_f > 0 { ks_f / ds_f as f64 } else { f64::NAN },
-        kron_medel_mot: if ds_m > 0 { ks_m / ds_m as f64 } else { f64::NAN },
-        kron_diff_fokus: if ds_f > 0 { kd_f / ds_f as f64 } else { f64::NAN },
-        kron_diff_mot: if ds_m > 0 { kd_m / ds_m as f64 } else { f64::NAN },
-        g_kron_fokus: gk,
-        krit_mat_r2_fokus: km_r2,
-        krit_fara_r2_fokus: kf_r2,
-        w_skada_fokus: ws,
-        theta_e_fokus: te,
-        theta_s_fokus: ts,
-        theta_j_fokus: tj,
-        tau_m1_fokus: tau_m1,
-        mode1_andel_fokus: m1_and,
-        kron_matt_minus_hungrig: if km_n > 0 && kh_n > 0 { km_sum / km_n as f64 - kh_sum / kh_n as f64 } else { f64::NAN },
-        kron_ung_minus_vuxen: if ku_n > 0 && kv_n > 0 { ku_sum / ku_n as f64 - kv_sum / kv_n as f64 } else { f64::NAN },
-        kron_skadad_minus_frisk: if ks_n > 0 && kf_n > 0 { ks_sum / ks_n as f64 - kf_sum / kf_n as f64 } else { f64::NAN },
-    }
-}
-
-fn sparb2348_en_arm(
-    sim_bas: &Sim,
-    fro: u64,
-    ai: usize,
-    tavling_ar: i64,
-    progress: Option<&(AtomicUsize, usize, std::time::Instant)>,
-) -> TavlingUtfall2348 {
-    let t0 = std::time::Instant::now();
-    let b1 = Formaga::LarB1Krit(0.20, 40);
-    let l2_konst = Formaga::LarL2Konst(0.20, 40);
-    let l2_inst = Formaga::LarL2Inst(0.20, 40);
-    let l2_m1 = Formaga::LarL2M1(0.20, 40);
-    let l2_full = Formaga::LarL2Full(0.20, 40);
-    let l2_stryk = Formaga::StrykL2Inst(0.20, 40);
-
-    let arm_namn = [
-        "L2_Noll",
-        "L2_DeladKonst_vs_B1",
-        "L2_Inst_vs_B1_A",
-        "L2_Inst_vs_B1_Spegel",
-        "L2_M1_vs_B1_A",
-        "L2_Full_vs_B1_A",
-        "L2_Inst_vs_Stryk_A",
-        "L2_Inst_vs_Tabell_A",
-    ][ai];
-
-    let (fm_m, fm_o, fokus_m) = match ai {
-        0 => (l2_inst, l2_inst, true),
-        1 => (l2_konst, b1, true),
-        2 => (l2_inst, b1, true),
-        3 => (b1, l2_inst, false),
-        4 => (l2_m1, b1, true),
-        5 => (l2_full, b1, true),
-        6 => (l2_inst, l2_stryk, true),
-        7 => (l2_inst, Formaga::TabellB1, true),
-        _ => unreachable!(),
-    };
-
-    let mut sim = sim_bas.clone();
-    sim.parning_inom_linje = false;
-    sim.parningar_totalt = 0;
-    sim.parningar_kors = 0;
-    sim.fodslar_markt = 0;
-    sim.fodslar_omarkt = 0;
-    sim.aktivera_rovdjur_b1(fro, lasta_b1_param(true, false));
-    sim.hjarn_arm = Some(HjarnArm {
-        namn: arm_namn,
-        markta: fm_m,
-        omarkta: fm_o,
-        spegel: !fokus_m,
-    });
-    sim.markera_halften(fro);
-    let u = kor_tavling_l2_loop(&mut sim, fokus_m, tavling_ar);
-
-    let prog_txt = if let Some((klara_a, totalt, t_tot)) = progress {
-        let k = klara_a.fetch_add(1, Ordering::Relaxed) + 1;
-        let ganget = t_tot.elapsed().as_secs_f64();
-        let kvar = if k > 0 && k < *totalt { ganget * (*totalt - k) as f64 / k as f64 } else { 0.0 };
-        format!(" [klara {k}/{totalt}, kört {:.1} min, kvar ~{:.1} min]", ganget / 60.0, kvar / 60.0)
-    } else {
-        String::new()
-    };
-    live_logg_med(
-        EGEN_LOGG_2348,
-        "Alt 2348",
-        &format!(
-            "Frö {fro} {arm_namn} klar ({:.1}s): medel={:.1}% vuxRov={:.1}/{:.1} te={:+.2} ts={:+.2} tj={:+.2} m1={:.1}%{prog_txt}",
-            t0.elapsed().as_secs_f64(),
-            u.medel_andel_fokus * 100.0,
-            u.rovdod_vuxen_fokus,
-            u.rovdod_vuxen_mot,
-            u.theta_e_fokus,
-            u.theta_s_fokus,
-            u.theta_j_fokus,
-            u.mode1_andel_fokus * 100.0,
-        ),
-    );
-    u
-}
-
-fn formatera_rapport_2348(
-    rader: &[(u64, Vec<TavlingUtfall2348>)],
-    inkor_ar: i64,
-    tavling_ar: i64,
-    sec: f64,
-) -> (String, String) {
-    let arm_namn = [
-        "L2_Noll",
-        "L2_DeladKonst_vs_B1",
-        "L2_Inst_vs_B1_A",
-        "L2_Inst_vs_B1_Spegel",
-        "L2_M1_vs_B1_A",
-        "L2_Full_vs_B1_A",
-        "L2_Inst_vs_Stryk_A",
-        "L2_Inst_vs_Tabell_A",
-    ];
-    let grid: Vec<&Vec<TavlingUtfall2348>> = rader.iter().map(|(_, v)| v).collect();
-    let n = grid.len();
-    let krav = (n * 3).div_ceil(4); // 15 av 20
-    let krav18 = (n * 9).div_ceil(10); // 18 av 20
-    let mut t = String::new();
-    let _ = writeln!(t, "# Alt 2348: Steg L2 — Biologisk inställare och Mode-2 → Mode-1-kompilering ({n} världar, {tavling_ar} år, {sec:.1}s)\n");
-    let _ = writeln!(t, "Låst utfallsregel: piharness `docs/evolution/alt2348-utfallsregel.md`. Inkörning {inkor_ar} år + tävling {tavling_ar} år (fri parning, exakt B1-rovdjursmiljö).\n");
-
-    let _ = writeln!(t, "## 1. Tävlingsutfall och evolverade inställargener per arm (år 40–50, median [95 %-bootstrap-CI])\n");
-    let _ = writeln!(t, "| Arm | Medelandel | Födslar (F/M) | Vuxen rovdöd (F/M) | Kron (F/M) | w_skada | θ_e / θ_s / θ_j | M1 % | Mat R² / Fara R² | >50 % |");
-    let _ = writeln!(t, "|---|---|---|---|---|---|---|---|---|---|");
-    for (ai, &namn) in arm_namn.iter().enumerate() {
-        let (ma, mal, mah) = bootstrap_ci_seed(&grid.iter().map(|r| r[ai].medel_andel_fokus).collect::<Vec<_>>(), 2348);
-        let ff = median_finita(grid.iter().map(|r| r[ai].fodslar_fokus as f64).collect());
-        let fm = median_finita(grid.iter().map(|r| r[ai].fodslar_mot as f64).collect());
-        let rvf = median_finita(grid.iter().map(|r| r[ai].rovdod_vuxen_fokus).collect());
-        let rvm = median_finita(grid.iter().map(|r| r[ai].rovdod_vuxen_mot).collect());
-        let kmf = median_finita(grid.iter().map(|r| r[ai].kron_medel_fokus).collect());
-        let kmm = median_finita(grid.iter().map(|r| r[ai].kron_medel_mot).collect());
-        let ws = median_finita(grid.iter().map(|r| r[ai].w_skada_fokus).collect());
-        let te = median_finita(grid.iter().map(|r| r[ai].theta_e_fokus).collect());
-        let ts = median_finita(grid.iter().map(|r| r[ai].theta_s_fokus).collect());
-        let tj = median_finita(grid.iter().map(|r| r[ai].theta_j_fokus).collect());
-        let m1 = median_finita(grid.iter().map(|r| r[ai].mode1_andel_fokus * 100.0).collect());
-        let rm = median_finita(grid.iter().map(|r| r[ai].krit_mat_r2_fokus).collect());
-        let rf = median_finita(grid.iter().map(|r| r[ai].krit_fara_r2_fokus).collect());
-        let w = grid.iter().filter(|r| r[ai].medel_andel_fokus > 0.50).count();
-        let _ = writeln!(
-            t,
-            "| {namn} | {:.1} % [{:.1}; {:.1}] | {ff:.0} / {fm:.0} | {rvf:.1} / {rvm:.1} | {kmf:.3} / {kmm:.3} | {ws:+.2} | {te:+.2} / {ts:+.2} / {tj:+.2} | {m1:.1} % | {rm:.3} / {rf:.3} | {w}/{n} |",
-            ma * 100.0, mal * 100.0, mah * 100.0
-        );
-    }
-
-    // K1: Nollkontroll och superpositionskontroll
-    let noll_med = median_finita(grid.iter().map(|r| r[0].medel_andel_fokus).collect());
-    let konst_med = median_finita(grid.iter().map(|r| r[1].medel_andel_fokus).collect());
-    let utdod_tot: usize = grid.iter().filter(|r| r.iter().any(|a| a.utdod)).count();
-    let k1 = (0.46..=0.54).contains(&noll_med) && (0.46..=0.54).contains(&konst_med) && utdod_tot == 0;
-
-    // K2: L2-A (Biologisk inställare) mot B1 (A + Spegel)
-    let speg_par: Vec<f64> = grid.iter().map(|r| 0.5 * (r[2].medel_andel_fokus + r[3].medel_andel_fokus)).collect();
-    let (sm, sml, smh) = bootstrap_ci_seed(&speg_par, 2348);
-    let w2_a = grid.iter().filter(|r| r[2].medel_andel_fokus > 0.50).count();
-    let w2_s = grid.iter().filter(|r| r[3].medel_andel_fokus > 0.50).count();
-    let k2_inst = w2_a >= krav && w2_s >= krav && sm > 0.51 && sml > 0.50;
-
-    let (m1_med, m1_l, m1_h) = bootstrap_ci_seed(&grid.iter().map(|r| r[4].medel_andel_fokus).collect::<Vec<_>>(), 2348);
-    let w_m1 = grid.iter().filter(|r| r[4].medel_andel_fokus > 0.50).count();
-    let (full_med, full_l, full_h) = bootstrap_ci_seed(&grid.iter().map(|r| r[5].medel_andel_fokus).collect::<Vec<_>>(), 2348);
-    let w_full = grid.iter().filter(|r| r[5].medel_andel_fokus > 0.50).count();
-    let k2_full = w_full >= krav && full_med > 0.51 && full_l > 0.50;
-
-    // K3: Världsmodell och Tabell
-    let (str_med, _, _) = bootstrap_ci_seed(&grid.iter().map(|r| r[6].medel_andel_fokus).collect::<Vec<_>>(), 2348);
-    let w_str = grid.iter().filter(|r| r[6].medel_andel_fokus > 0.50).count();
-    let (tab_med, _, _) = bootstrap_ci_seed(&grid.iter().map(|r| r[7].medel_andel_fokus).collect::<Vec<_>>(), 2348);
-    let w_tab = grid.iter().filter(|r| r[7].medel_andel_fokus > 0.50).count();
-    let k3 = w_str >= krav18 && str_med >= 0.60 && w_tab >= krav18 && tab_med >= 0.90;
-
-    // K4: Fysiologisk målväxling i L2_Inst (mätt vs hungrig, ung vs vuxen, skadad vs frisk — poolat över arm 2 & 3)
-    let k4_mh_med = median_finita(grid.iter().map(|r| 0.5 * (r[2].kron_matt_minus_hungrig + r[3].kron_matt_minus_hungrig)).collect());
-    let k4_uv_med = median_finita(grid.iter().map(|r| 0.5 * (r[2].kron_ung_minus_vuxen + r[3].kron_ung_minus_vuxen)).collect());
-    let k4_sf_med = median_finita(grid.iter().map(|r| 0.5 * (r[2].kron_skadad_minus_frisk + r[3].kron_skadad_minus_frisk)).collect());
-    let te_med = median_finita(grid.iter().map(|r| 0.5 * (r[2].theta_e_fokus + r[3].theta_e_fokus)).collect());
-    let tj_med = median_finita(grid.iter().map(|r| 0.5 * (r[2].theta_j_fokus + r[3].theta_j_fokus)).collect());
-    let ts_med = median_finita(grid.iter().map(|r| 0.5 * (r[2].theta_s_fokus + r[3].theta_s_fokus)).collect());
-
-    let c_mh = grid.iter().filter(|r| {
-        let d = 0.5 * (r[2].kron_matt_minus_hungrig + r[3].kron_matt_minus_hungrig);
-        let g = 0.5 * (r[2].theta_e_fokus + r[3].theta_e_fokus);
-        d.is_finite() && ((g > 0.0 && d > 0.0) || (g < 0.0 && d < 0.0))
-    }).count();
-    let c_uv = grid.iter().filter(|r| {
-        let d = 0.5 * (r[2].kron_ung_minus_vuxen + r[3].kron_ung_minus_vuxen);
-        let g = 0.5 * (r[2].theta_j_fokus + r[3].theta_j_fokus);
-        d.is_finite() && ((g > 0.0 && d > 0.0) || (g < 0.0 && d < 0.0))
-    }).count();
-    let c_sf = grid.iter().filter(|r| {
-        let d = 0.5 * (r[2].kron_skadad_minus_frisk + r[3].kron_skadad_minus_frisk);
-        let g = 0.5 * (r[2].theta_s_fokus + r[3].theta_s_fokus);
-        d.is_finite() && ((g > 0.0 && d > 0.0) || (g < 0.0 && d < 0.0))
-    }).count();
-    let k4 = c_mh >= krav || c_uv >= krav || c_sf >= krav;
-
-    let dom = if k1 && k3 && k4 && (k2_inst || k2_full) {
-        if k2_inst && k2_full {
-            "GRÖNT (L2-Inst & L2-Full PASS mot bekräftade B1) — redo för oberoende bekräftelse på 321–340"
-        } else if k2_inst {
-            "GRÖNT (L2-Inst Biologisk inställare PASS mot bekräftade B1) — redo för oberoende bekräftelse på 321–340"
-        } else {
-            "GRÖNT (L2-Full PASS mot bekräftade B1) — redo för oberoende bekräftelse på 321–340"
-        }
-    } else {
-        "RÖTT / EJ VISAT — ingen L2-variant slog bekräftade LarB1Krit på samtliga låsta krav; bekräftade B1 behålls orörd"
-    };
-
-    let _ = writeln!(t, "\n## 2. Låst utfallsbedömning (krav {krav}/{n}, K3 {krav18}/{n})\n");
-    let _ = writeln!(t, "- **K1 (Noll & Superposition 46–54 %, 0 utdöenden):** `L2_Noll = {:.1} %`, `L2_DeladKonst_vs_B1 = {:.1} %`, utdöenden `{utdod_tot}/{n}` -> **{}**", noll_med * 100.0, konst_med * 100.0, if k1 { "PASS" } else { "FAIL" });
-    let _ = writeln!(t, "- **K2a (L2-A Biologisk inställare vs B1):** A `{w2_a}/{n}`, Spegel `{w2_s}/{n}`, Spegelmedel `{:.1} % [{:.1}; {:.1}]` -> **{}**", sm * 100.0, sml * 100.0, smh * 100.0, if k2_inst { "PASS" } else { "FAIL" });
-    let _ = writeln!(t, "- **K2b (Isolerad L2-B Mode-1 vs B1):** `{w_m1}/{n}`, median `{:.1} % [{:.1}; {:.1}]`", m1_med * 100.0, m1_l * 100.0, m1_h * 100.0);
-    let _ = writeln!(t, "- **K2c (L2-Full vs B1):** `{w_full}/{n}`, median `{:.1} % [{:.1}; {:.1}]` -> **{}**", full_med * 100.0, full_l * 100.0, full_h * 100.0, if k2_full { "PASS" } else { "FAIL" });
-    let _ = writeln!(t, "- **K3 (Världsmodell & Regel 14):** `vs Stryk` `{w_str}/{n}` (`{:.1} %`), `vs Tabell` `{w_tab}/{n}` (`{:.1} %`) -> **{}**", str_med * 100.0, tab_med * 100.0, if k3 { "PASS" } else { "FAIL" });
-    let _ = writeln!(t, "- **K4 (Fysiologisk målväxling inom `L2_Inst`):** mätt−hungrig `{k4_mh_med:+.4}` (`θ_e={te_med:+.2}`, riktning `{c_mh}/{n}`), ung−vuxen `{k4_uv_med:+.4}` (`θ_j={tj_med:+.2}`, riktning `{c_uv}/{n}`), skadad−frisk `{k4_sf_med:+.4}` (`θ_s={ts_med:+.2}`, riktning `{c_sf}/{n}`) -> **{}**", if k4 { "PASS" } else { "FAIL" });
-    let _ = writeln!(t, "- **Samlad låst dom:** **{dom}**");
-    (t, dom.to_string())
-}
-
-fn kora_sparb2348(fron: &[u64], inkor_ar: i64, tavling_ar: i64, tradar: usize, ra_ut: Option<&Path>) -> Result<String, String> {
-    if fron.is_empty() {
-        return Err("inga frön".into());
-    }
-    let t_start = std::time::Instant::now();
-    live_logg_med(
-        EGEN_LOGG_2348,
-        "Alt 2348",
-        &format!(
-            "Startar Alt 2348 (Steg L2 Biologisk inställare & Mode-1: 8 parade armar) på {} världar (inkörning {inkor_ar} år, tävling {tavling_ar} år, {tradar} trådar)",
-            fron.len()
-        ),
-    );
-
-    let next_f = AtomicUsize::new(0);
-    let n_tr = tradar.max(1).min(fron.len());
-    let mut bas_par: Vec<(u64, Sim)> = std::thread::scope(|s| -> Result<Vec<(u64, Sim)>, String> {
-        let hs: Vec<_> = (0..n_tr)
-            .map(|_| {
-                s.spawn(|| -> Result<Vec<(u64, Sim)>, String> {
-                    let mut out = Vec::new();
-                    loop {
-                        let fi = next_f.fetch_add(1, Ordering::Relaxed);
-                        if fi >= fron.len() {
-                            break;
-                        }
-                        let fro = fron[fi];
-                        let t0 = std::time::Instant::now();
-                        let mut sim = bygg_varld_2238(fro)?;
-                        for _ in 0..inkor_ar * STEG_PER_AR {
-                            sim.steg();
-                        }
-                        live_logg_med(
-                            EGEN_LOGG_2348,
-                            "Alt 2348",
-                            &format!("Inkörning frö {fro} klar ({} djur, {:.1}s)", sim.antal(), t0.elapsed().as_secs_f64()),
-                        );
-                        out.push((fro, sim));
-                    }
-                    Ok(out)
-                })
-            })
-            .collect();
-        let mut all = Vec::with_capacity(fron.len());
-        for h in hs {
-            all.extend(h.join().map_err(|_| "inkörningstråd föll".to_string())??);
-        }
-        Ok(all)
-    })?;
-    bas_par.sort_by_key(|x| x.0);
-    let bas_arc = Arc::new(bas_par);
-
-    const N_ARM_2348: usize = 8;
-    let mut jobb: Vec<(usize, usize)> = Vec::with_capacity(fron.len() * N_ARM_2348);
-    for ai in 0..N_ARM_2348 {
-        for fi in 0..bas_arc.len() {
-            jobb.push((fi, ai));
-        }
-    }
-    let next_j = AtomicUsize::new(0);
-    let progress = Arc::new((AtomicUsize::new(0), jobb.len(), std::time::Instant::now()));
-    let mut grid = vec![vec![TavlingUtfall2348::default(); N_ARM_2348]; bas_arc.len()];
-    let grid_mtx = Mutex::new(&mut grid);
-    let n_jw = tradar.max(1).min(jobb.len());
-    std::thread::scope(|s| {
-        for _ in 0..n_jw {
-            let bas_c = Arc::clone(&bas_arc);
-            let prog_c = Arc::clone(&progress);
-            let jobb_ref = &jobb;
-            let next_ref = &next_j;
-            let mtx_ref = &grid_mtx;
-            s.spawn(move || loop {
-                let ji = next_ref.fetch_add(1, Ordering::Relaxed);
-                if ji >= jobb_ref.len() {
-                    break;
-                }
-                let (fi, ai) = jobb_ref[ji];
-                let (fro, ref sim_bas) = bas_c[fi];
-                let u = sparb2348_en_arm(sim_bas, fro, ai, tavling_ar, Some(&*prog_c));
-                mtx_ref.lock().unwrap()[fi][ai] = u;
-            });
-        }
-    });
-
-    let sec = t_start.elapsed().as_secs_f64();
-    let rader: Vec<(u64, Vec<TavlingUtfall2348>)> = bas_arc
-        .iter()
-        .zip(grid.into_iter())
-        .map(|((fro, _), rad)| (*fro, rad))
-        .collect();
-    if let Some(p) = ra_ut {
-        if let Some(par) = p.parent() {
-            let _ = create_dir_all(par);
-        }
-        let block = Block2348Json { inkor_ar, tavling_ar, sec, rader: rader.clone() };
-        let j = serde_json::to_string_pretty(&block).map_err(|e| format!("json 2348: {e}"))?;
-        std::fs::write(p, j).map_err(|e| format!("skriv {}: {e}", p.display()))?;
-    }
-    let (t, dom) = formatera_rapport_2348(&rader, inkor_ar, tavling_ar, sec);
-    live_logg_med(EGEN_LOGG_2348, "Alt 2348", &format!("KLAR sparb2348 ({sec:.1}s): {dom}"));
-    Ok(t)
-}
-
-fn slaihops_2348(filer: &[PathBuf]) -> Result<String, String> {
-    if filer.is_empty() {
-        return Err("inga blockfiler angivna med --in".into());
-    }
-    let mut rader: Vec<(u64, Vec<TavlingUtfall2348>)> = Vec::new();
-    let mut inkor_ar = None;
-    let mut tavling_ar = None;
-    let mut max_sec = 0.0f64;
-    for f in filer {
-        let s = std::fs::read_to_string(f).map_err(|e| format!("läs {}: {e}", f.display()))?;
-        let b: Block2348Json = serde_json::from_str(&s).map_err(|e| format!("tolka {}: {e}", f.display()))?;
-        match inkor_ar {
-            None => inkor_ar = Some(b.inkor_ar),
-            Some(x) if x != b.inkor_ar => return Err(format!("olika inkor_ar: {x} vs {}", b.inkor_ar)),
-            _ => {}
-        }
-        match tavling_ar {
-            None => tavling_ar = Some(b.tavling_ar),
-            Some(x) if x != b.tavling_ar => return Err(format!("olika tavling_ar: {x} vs {}", b.tavling_ar)),
-            _ => {}
-        }
-        if b.sec > max_sec {
-            max_sec = b.sec;
-        }
-        rader.extend(b.rader);
-    }
-    rader.sort_by_key(|(fro, _)| *fro);
-    for w in rader.windows(2) {
-        if w[0].0 == w[1].0 {
-            return Err(format!("dubblettfrö {} i blockfilerna", w[0].0));
-        }
-    }
-    if rader.is_empty() {
-        return Err("inga världar i blockfilerna".into());
-    }
-    let (t, _) = formatera_rapport_2348(&rader, inkor_ar.unwrap(), tavling_ar.unwrap(), max_sec);
-    Ok(t)
-}
-
 #[cfg(test)]
 mod prov {
     use super::*;
@@ -8910,77 +8507,6 @@ mod prov {
         let ihop = slaihops_2282(&[f2.clone(), f1.clone()]).unwrap();
         assert_eq!(ihop, hel_g, "sammanslagen Alt 2282-rapport måste vara bitvis identisk med hel körning");
         assert!(slaihops_2282(&[f1.clone(), f1.clone()]).is_err(), "dubblettfrö måste avvisas");
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn alt2348_block_sammanslagning_och_k1_k4_dom() {
-        let gor_rad = |fro: u64, k2_pass: bool, k4_pass: bool| -> (u64, Vec<TavlingUtfall2348>) {
-            let mut v = Vec::new();
-            for ai in 0..8 {
-                let andel = match ai {
-                    0 | 1 => 0.50,
-                    2 | 3 => if k2_pass { 0.56 } else { 0.49 },
-                    4 => 0.50,
-                    5 => if k2_pass { 0.55 } else { 0.49 },
-                    6 => 0.67,
-                    7 => 0.99,
-                    _ => unreachable!(),
-                };
-                v.push(TavlingUtfall2348 {
-                    slut_andel_fokus: andel,
-                    medel_andel_fokus: andel,
-                    fodslar_fokus: 800,
-                    fodslar_mot: 700,
-                    slutpop: 11000.0,
-                    utdod: false,
-                    rovdod_vuxen_fokus: 75.0,
-                    rovdod_vuxen_mot: 85.0,
-                    kron_medel_fokus: 0.52,
-                    kron_medel_mot: 0.49,
-                    kron_diff_fokus: 0.005,
-                    kron_diff_mot: 0.0,
-                    g_kron_fokus: 1.0,
-                    krit_mat_r2_fokus: 0.50,
-                    krit_fara_r2_fokus: 0.05,
-                    w_skada_fokus: 1.8,
-                    theta_e_fokus: 1.2,
-                    theta_s_fokus: 0.8,
-                    theta_j_fokus: 1.5,
-                    tau_m1_fokus: 0.1,
-                    mode1_andel_fokus: 0.15,
-                    kron_matt_minus_hungrig: if k4_pass { 0.02 } else { -0.02 },
-                    kron_ung_minus_vuxen: if k4_pass { 0.03 } else { -0.03 },
-                    kron_skadad_minus_frisk: if k4_pass { 0.01 } else { -0.01 },
-                });
-            }
-            (fro, v)
-        };
-        let gron = vec![gor_rad(261, true, true), gor_rad(262, true, true), gor_rad(263, true, true), gor_rad(264, true, true)];
-        let (hel_g, dom_g) = formatera_rapport_2348(&gron, 10, 50, 20.0);
-        assert!(dom_g.starts_with("GRÖNT"), "väntade GRÖNT, fick {dom_g}");
-
-        // Röd kontroll 1: om K2 faller måste domen bli RÖTT
-        let rod1 = vec![gor_rad(261, false, true), gor_rad(262, false, true), gor_rad(263, false, true), gor_rad(264, false, true)];
-        let (_, dom_r1) = formatera_rapport_2348(&rod1, 10, 50, 20.0);
-        assert!(dom_r1.starts_with("RÖTT"), "K2-fall måste ge RÖTT, fick {dom_r1}");
-
-        // Röd kontroll 2: om K4 (målväxling i genens riktning) faller måste domen bli RÖTT
-        let rod2 = vec![gor_rad(261, true, false), gor_rad(262, true, false), gor_rad(263, true, false), gor_rad(264, true, false)];
-        let (_, dom_r2) = formatera_rapport_2348(&rod2, 10, 50, 20.0);
-        assert!(dom_r2.starts_with("RÖTT"), "K4-fall måste ge RÖTT, fick {dom_r2}");
-
-        let dir = std::env::temp_dir().join("alt2348_merge_prov");
-        let _ = std::fs::create_dir_all(&dir);
-        let f1 = dir.join("b1.json");
-        let f2 = dir.join("b2.json");
-        let b1 = Block2348Json { inkor_ar: 10, tavling_ar: 50, sec: 18.0, rader: vec![gron[2].clone(), gron[0].clone()] };
-        let b2 = Block2348Json { inkor_ar: 10, tavling_ar: 50, sec: 20.0, rader: vec![gron[3].clone(), gron[1].clone()] };
-        std::fs::write(&f1, serde_json::to_string(&b1).unwrap()).unwrap();
-        std::fs::write(&f2, serde_json::to_string(&b2).unwrap()).unwrap();
-        let ihop = slaihops_2348(&[f2.clone(), f1.clone()]).unwrap();
-        assert_eq!(ihop, hel_g, "sammanslagen Alt 2348-rapport måste vara bitvis identisk med hel körning");
-        assert!(slaihops_2348(&[f1.clone(), f1.clone()]).is_err(), "dubblettfrö måste avvisas");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
